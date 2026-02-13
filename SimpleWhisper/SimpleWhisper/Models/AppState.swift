@@ -520,9 +520,13 @@ final class AppState {
         pendingHotkeyModifiers = []
         hotkeyManager.startModifierMonitor { [weak self] modifiers in
             guard let self else { return }
+            let wasEmpty = self.recordingModifiers.isEmpty
             self.recordingModifiers = modifiers
             if !modifiers.isEmpty {
-                self.pendingHotkeyModifiers = modifiers
+                // Only update pending when starting a new press cycle or adding more keys
+                if wasEmpty || modifiers.count >= self.pendingHotkeyModifiers.count {
+                    self.pendingHotkeyModifiers = modifiers
+                }
             }
         }
     }
