@@ -94,7 +94,7 @@ struct FloatingPillView: View {
 
     private var processingPill: some View {
         HStack(spacing: 10) {
-            SpinnerRing()
+            ProgressRing(progress: appState.transcriptionProgress)
             Text(lang.processing)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
@@ -148,10 +148,10 @@ extension View {
     }
 }
 
-// MARK: - Spinner Ring
+// MARK: - Progress Ring
 
-private struct SpinnerRing: View {
-    @State private var isSpinning = false
+private struct ProgressRing: View {
+    var progress: Double
 
     var body: some View {
         Circle()
@@ -159,12 +159,11 @@ private struct SpinnerRing: View {
             .frame(width: 16, height: 16)
             .overlay {
                 Circle()
-                    .trim(from: 0, to: 0.25)
+                    .trim(from: 0, to: min(progress, 1.0))
                     .stroke(Color.brand, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                    .rotationEffect(.degrees(isSpinning ? 360 : 0))
-                    .animation(.linear(duration: 0.8).repeatForever(autoreverses: false), value: isSpinning)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 0.3), value: progress)
             }
-            .onAppear { isSpinning = true }
     }
 }
 
