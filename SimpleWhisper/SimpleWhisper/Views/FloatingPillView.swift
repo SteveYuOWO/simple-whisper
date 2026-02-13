@@ -138,6 +138,7 @@ private struct PillStyleModifier: ViewModifier {
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
             .background(Color(hex: 0x1C1C1E), in: Capsule())
+            .compositingGroup()
             .shadow(color: .black.opacity(0.25), radius: 15, x: 0, y: 8)
     }
 }
