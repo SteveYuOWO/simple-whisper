@@ -10,6 +10,7 @@ final class AppState {
     var transcriptionState: TranscriptionState = .idle
     var recordingDuration: TimeInterval = 0
     var transcriptionProgress: Double = 0
+    var processingPhase: ProcessingPhase = .transcribing
     var transcribedText: String = ""
     var audioDuration: TimeInterval = 0
     var wordCount: Int = 0
@@ -448,6 +449,7 @@ final class AppState {
 
     private func processAudio(_ samples: [Float]) {
         transcriptionState = .processing
+        processingPhase = .transcribing
         startProgressAnimation()
 
         Task {
@@ -490,7 +492,7 @@ final class AppState {
                 var finalText = text
                 if await MainActor.run(body: { self.enableLLMEnhancement && self.isLLMConfigured }) {
                     await MainActor.run {
-                        self.transcriptionState = .enhancing
+                        self.processingPhase = .enhancing
                         self.startProgressAnimation()
                     }
 
@@ -673,6 +675,7 @@ final class AppState {
         progressTimer?.invalidate()
         progressTimer = nil
         transcriptionState = .idle
+        processingPhase = .transcribing
         transcribedText = ""
         recordingDuration = 0
         transcriptionProgress = 0

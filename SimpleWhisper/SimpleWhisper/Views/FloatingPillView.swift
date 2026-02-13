@@ -27,8 +27,6 @@ struct FloatingPillView: View {
                         recordingPill
                     case .processing:
                         processingPill
-                    case .enhancing:
-                        enhancingPill
                     case .done:
                         donePill
                     }
@@ -95,18 +93,6 @@ struct FloatingPillView: View {
     // MARK: - Processing
 
     private var processingPill: some View {
-        HStack(spacing: 10) {
-            SpinnerRing()
-            Text(lang.processing)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white.opacity(0.8))
-        }
-        .pillStyle()
-    }
-
-    // MARK: - Enhancing
-
-    private var enhancingPill: some View {
         HStack(spacing: 10) {
             SpinnerRing()
             Text(lang.processing)

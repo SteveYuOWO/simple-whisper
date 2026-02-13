@@ -2,27 +2,25 @@ import SwiftUI
 
 struct ProcessingView: View {
     @Environment(AppState.self) private var appState
-    @State private var isSpinning = false
 
-    private var isEnhancing: Bool { appState.transcriptionState == .enhancing }
+    private var isEnhancing: Bool { appState.processingPhase == .enhancing }
 
     var body: some View {
         let lang = appState.appLanguage
 
         VStack(spacing: 0) {
             VStack(spacing: 14) {
-                // Spinner
+                // Progress circle
                 Circle()
                     .stroke(Color.bgTertiary, lineWidth: 3)
                     .frame(width: 36, height: 36)
                     .overlay {
                         Circle()
-                            .trim(from: 0, to: 0.3)
+                            .trim(from: 0, to: min(appState.transcriptionProgress, 1.0))
                             .stroke(Color.brand, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                            .rotationEffect(.degrees(isSpinning ? 360 : 0))
-                            .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: isSpinning)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.linear(duration: 0.3), value: appState.transcriptionProgress)
                     }
-                    .onAppear { isSpinning = true }
 
                 Text(isEnhancing ? lang.enhancing : lang.transcribing)
                     .font(.system(size: 16, weight: .semibold))

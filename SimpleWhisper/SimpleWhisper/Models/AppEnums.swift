@@ -4,8 +4,12 @@ enum TranscriptionState: Equatable {
     case idle
     case recording
     case processing
-    case enhancing
     case done
+}
+
+enum ProcessingPhase: Equatable {
+    case transcribing
+    case enhancing
 }
 
 struct LLMModelOption: Identifiable, Hashable {
