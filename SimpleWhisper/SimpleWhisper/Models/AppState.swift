@@ -1,4 +1,5 @@
 import AVFoundation
+import ServiceManagement
 import SwiftUI
 
 @MainActor
@@ -34,22 +35,24 @@ final class AppState {
     var hotkeyModifiers: [String] = ["fn", "control"] {
         didSet {
             configManager.update { $0.hotkeyModifiers = hotkeyModifiers }
-            hotkeyManager.updateModifiers(from: hotkeyModifiers)
+            hotkeyManager.updateHotkey(modifiers: hotkeyModifiers, keyCode: hotkeyKeyCode)
+        }
+    }
+    var hotkeyKeyCode: Int = -1 {
+        didSet {
+            configManager.update { $0.hotkeyKeyCode = hotkeyKeyCode }
+            hotkeyManager.updateHotkey(modifiers: hotkeyModifiers, keyCode: hotkeyKeyCode)
         }
     }
     var launchAtLogin: Bool = true {
-        didSet { configManager.update { $0.launchAtLogin = launchAtLogin } }
+        didSet {
+            configManager.update { $0.launchAtLogin = launchAtLogin }
+            updateLaunchAtLogin(launchAtLogin)
+        }
     }
     var soundFeedback: Bool = true {
         didSet { configManager.update { $0.soundFeedback = soundFeedback } }
     }
-    var autoPunctuation: Bool = true {
-        didSet { configManager.update { $0.autoPunctuation = autoPunctuation } }
-    }
-    var showInDock: Bool = false {
-        didSet { configManager.update { $0.showInDock = showInDock } }
-    }
-
     // MARK: - LLM Enhancement Settings (persisted)
 
     var enableLLMEnhancement: Bool = false {
@@ -78,6 +81,7 @@ final class AppState {
     var isOllamaRunning: Bool = false
     var installedOllamaModels: [String] = []
     var isDownloadingOllamaModel: Bool = false
+    var downloadingOllamaModelName: String?
     var ollamaModelDownloadProgress: Double = 0
     var isStartingOllama: Bool = false
 
@@ -88,25 +92,37 @@ final class AppState {
     var modelDownloadProgress: Double = 0
     var modelDownloadError: String?
 
-    // MARK: - Error State
+    // MARK: - Notification State
 
     var errorMessage: String?
+    var successMessage: String?
     private var errorDismissTimer: Timer?
+    private var successDismissTimer: Timer?
+
+    // MARK: - History
+
+    var transcriptionHistory: [TranscriptionRecord] = []
 
     // MARK: - Settings Navigation
 
     var selectedTab: SettingsTab = .input
 
+    // MARK: - Test Input (transient, not persisted)
+
+    var testInputText: String = ""
+
     // MARK: - Hotkey Recording State (transient, not persisted)
 
     var isRecordingHotkey: Bool = false
     var recordingModifiers: [String] = []
+    var recordingKeyCode: Int = -1
     var pendingHotkeyModifiers: [String] = []
+    var pendingHotkeyKeyCode: Int = -1
 
     // MARK: - Hotkey Display
 
-    func modifierDisplay(for modifiers: [String]) -> String {
-        modifiers.map { mod in
+    func hotkeyDisplayString(modifiers: [String], keyCode: Int = -1) -> String {
+        var result = modifiers.map { mod in
             switch mod {
             case "fn": return "Fn"
             case "control": return "\u{2303}"
@@ -115,11 +131,15 @@ final class AppState {
             case "shift": return "\u{21E7}"
             default: return mod
             }
-        }.joined(separator: "")
+        }.joined()
+        if keyCode >= 0 {
+            result += HotkeyManager.keyCodeToDisplayName(keyCode)
+        }
+        return result
     }
 
     var hotkeyDisplay: String {
-        modifierDisplay(for: hotkeyModifiers)
+        hotkeyDisplayString(modifiers: hotkeyModifiers, keyCode: hotkeyKeyCode)
     }
 
     var needsModelSetup: Bool { !isModelDownloaded }
@@ -146,6 +166,8 @@ final class AppState {
 
     init() {
         loadFromConfig()
+        transcriptionHistory = configManager.loadHistory()
+        syncLaunchAtLoginState()
         checkOllamaStatus()
     }
 
@@ -156,16 +178,37 @@ final class AppState {
         selectedLanguage = Language(rawValue: cfg.selectedLanguage) ?? .auto
         selectedMicrophone = cfg.selectedMicrophone
         hotkeyModifiers = cfg.hotkeyModifiers
+        hotkeyKeyCode = cfg.hotkeyKeyCode
         launchAtLogin = cfg.launchAtLogin
         soundFeedback = cfg.soundFeedback
-        autoPunctuation = cfg.autoPunctuation
-        showInDock = cfg.showInDock
         enableLLMEnhancement = cfg.enableLLMEnhancement
         llmProvider = LLMProvider(rawValue: cfg.llmProvider) ?? .ollama
         llmApiKey = cfg.llmApiKey
         llmModel = cfg.llmModel.isEmpty ? "llama3.2" : cfg.llmModel
         llmEndpoint = cfg.llmEndpoint
         updateModelStatus()
+    }
+
+    // MARK: - Launch at Login
+
+    private func syncLaunchAtLoginState() {
+        let status = SMAppService.mainApp.status
+        let isRegistered = (status == .enabled)
+        if launchAtLogin != isRegistered {
+            updateLaunchAtLogin(launchAtLogin)
+        }
+    }
+
+    private func updateLaunchAtLogin(_ enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            print("[AppState] Failed to \(enabled ? "register" : "unregister") launch at login: \(error)")
+        }
     }
 
     func updateModelStatus() {
@@ -262,10 +305,25 @@ final class AppState {
         }
     }
 
+    func showSuccess(_ message: String) {
+        successDismissTimer?.invalidate()
+        successMessage = message
+
+        successDismissTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
+            self?.dismissSuccess()
+        }
+    }
+
     func dismissError() {
         errorDismissTimer?.invalidate()
         errorDismissTimer = nil
         errorMessage = nil
+    }
+
+    func dismissSuccess() {
+        successDismissTimer?.invalidate()
+        successDismissTimer = nil
+        successMessage = nil
     }
 
     // MARK: - Recording Flow
@@ -443,6 +501,20 @@ final class AppState {
 
                 await MainActor.run {
                     self.transcriptionState = .done
+
+                    // Save to history
+                    if !self.transcribedText.isEmpty {
+                        let record = TranscriptionRecord(
+                            id: UUID(),
+                            timestamp: Date(),
+                            text: self.transcribedText,
+                            audioDuration: self.audioDuration,
+                            processingTime: self.processingTime,
+                            wordCount: self.wordCount
+                        )
+                        self.transcriptionHistory.append(record)
+                        self.configManager.saveHistory(self.transcriptionHistory)
+                    }
                 }
 
                 // Output text to current input field
@@ -493,7 +565,7 @@ final class AppState {
         // Permission granted, reset prompt flag in case it was denied before
         hasPromptedForAccessibility = false
 
-        hotkeyManager.updateModifiers(from: hotkeyModifiers)
+        hotkeyManager.updateHotkey(modifiers: hotkeyModifiers, keyCode: hotkeyKeyCode)
 
         hotkeyManager.onKeyDown = { [weak self] in
             self?.startRecording()
@@ -517,32 +589,58 @@ final class AppState {
         hotkeyManager.stop()
         isRecordingHotkey = true
         recordingModifiers = []
+        recordingKeyCode = -1
         pendingHotkeyModifiers = []
-        hotkeyManager.startModifierMonitor { [weak self] modifiers in
+        pendingHotkeyKeyCode = -1
+        hotkeyManager.startMonitor { [weak self] modifiers, keyCode in
             guard let self else { return }
-            let wasEmpty = self.recordingModifiers.isEmpty
+            let prevEmpty = self.recordingModifiers.isEmpty && self.recordingKeyCode < 0
             self.recordingModifiers = modifiers
-            if !modifiers.isEmpty {
-                // Only update pending when starting a new press cycle or adding more keys
-                if wasEmpty || modifiers.count >= self.pendingHotkeyModifiers.count {
+            self.recordingKeyCode = Int(keyCode)
+
+            let currentTotal = modifiers.count + (keyCode >= 0 ? 1 : 0)
+            let pendingTotal = self.pendingHotkeyModifiers.count + (self.pendingHotkeyKeyCode >= 0 ? 1 : 0)
+
+            if currentTotal > 0 {
+                if prevEmpty || currentTotal >= pendingTotal {
                     self.pendingHotkeyModifiers = modifiers
+                    self.pendingHotkeyKeyCode = Int(keyCode)
                 }
             }
         }
     }
 
+    var hasPendingHotkey: Bool {
+        !pendingHotkeyModifiers.isEmpty || pendingHotkeyKeyCode >= 0
+    }
+
     func confirmRecordingHotkey() {
-        guard !pendingHotkeyModifiers.isEmpty else { return }
+        guard hasPendingHotkey else { return }
         hotkeyModifiers = pendingHotkeyModifiers
+        hotkeyKeyCode = pendingHotkeyKeyCode
         cancelRecordingHotkey()
     }
 
     func cancelRecordingHotkey() {
         isRecordingHotkey = false
-        hotkeyManager.stopModifierMonitor()
+        hotkeyManager.stopMonitor()
         recordingModifiers = []
+        recordingKeyCode = -1
         pendingHotkeyModifiers = []
+        pendingHotkeyKeyCode = -1
         startHotkeyListening()
+    }
+
+    // MARK: - History Management
+
+    func deleteHistoryRecord(id: UUID) {
+        transcriptionHistory.removeAll { $0.id == id }
+        configManager.saveHistory(transcriptionHistory)
+    }
+
+    func clearHistory() {
+        transcriptionHistory.removeAll()
+        configManager.saveHistory(transcriptionHistory)
     }
 
     // MARK: - Reset
@@ -571,6 +669,9 @@ final class AppState {
         let running = await ollamaManager.isOllamaRunning()
         await MainActor.run {
             isOllamaRunning = running
+            if running {
+                isOllamaInstalled = true
+            }
         }
 
         if running {
@@ -617,29 +718,27 @@ final class AppState {
 
     func downloadOllamaModel(_ modelName: String) async {
         guard isOllamaRunning else {
-            print("[AppState] Cannot download model: Ollama not running")
+            showError(appLanguage.ollamaNotRunning)
             return
         }
 
-        await MainActor.run {
-            isDownloadingOllamaModel = true
-            ollamaModelDownloadProgress = 0
-        }
+        isDownloadingOllamaModel = true
+        downloadingOllamaModelName = modelName
+        ollamaModelDownloadProgress = 0
 
         do {
             try await ollamaManager.pullModel(name: modelName) { [weak self] progress in
                 self?.ollamaModelDownloadProgress = progress
             }
-            await MainActor.run {
-                isDownloadingOllamaModel = false
-                ollamaModelDownloadProgress = 1.0
-            }
+            isDownloadingOllamaModel = false
+            downloadingOllamaModelName = nil
+            ollamaModelDownloadProgress = 1.0
             await refreshInstalledOllamaModels()
         } catch {
             print("[AppState] Failed to download Ollama model: \(error)")
-            await MainActor.run {
-                isDownloadingOllamaModel = false
-            }
+            isDownloadingOllamaModel = false
+            downloadingOllamaModelName = nil
+            showError(error.localizedDescription)
         }
     }
 

@@ -2,16 +2,7 @@ import Foundation
 
 final class LLMService {
     static let systemPrompt = """
-        You are a transcription post-processor. Clean up the following speech-to-text output:
-
-        Rules:
-        1. Remove any timestamp markers (e.g., <|0.00|>, <|2.00|>)
-        2. Fix typos, wrong characters, and misrecognized words
-        3. Make the text fluent and natural in the original language
-        4. For short speech: output as a single clean paragraph
-        5. For long speech with structured content: organize with numbered lists, headings, or paragraphs as appropriate
-        6. Preserve the speaker's original meaning — do not add, remove, or change the intent
-        7. Output ONLY the cleaned text, no explanations or metadata
+        Clean up the speech-to-text transcription below. Remove filler words, fix punctuation, and correct obvious errors. Keep the original language and meaning. Output only the cleaned text.
         """
 
     func enhance(
@@ -44,13 +35,14 @@ final class LLMService {
             // For Ollama: check installation, service status, and model availability
             let ollamaManager = OllamaManager.shared
 
-            // 1. Check if Ollama is installed
-            guard ollamaManager.checkOllamaInstalled() else {
-                throw LLMError.ollamaNotInstalled
-            }
+            // 1. Check if Ollama service is reachable (covers both local and remote)
+            let running = await ollamaManager.isOllamaRunning()
 
-            // 2. Check if Ollama service is running
-            guard await ollamaManager.isOllamaRunning() else {
+            if !running {
+                // Service not reachable — check if binary is installed locally
+                if !ollamaManager.checkOllamaInstalled() {
+                    throw LLMError.ollamaNotInstalled
+                }
                 throw LLMError.ollamaNotRunning
             }
 

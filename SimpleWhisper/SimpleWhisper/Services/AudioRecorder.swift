@@ -3,7 +3,9 @@ import Foundation
 
 @Observable
 final class AudioRecorder {
-    private var audioEngine: AVAudioEngine?
+    /// Reuse a single engine to avoid -10877 (kAudioUnitErr_NoConnection) errors
+    /// that occur when rapidly creating and destroying AVAudioEngine instances.
+    private let audioEngine = AVAudioEngine()
     private var audioBuffer: [Float] = []
     private let bufferLock = NSLock()
     private let targetSampleRate: Double = 16000
@@ -27,13 +29,16 @@ final class AudioRecorder {
     }
 
     func startRecording() throws {
-        guard !isRecording else { return }
+        // If a previous recording is still active, stop it first.
+        if isRecording {
+            _ = stopRecording()
+        }
 
         bufferLock.lock()
         audioBuffer.removeAll(keepingCapacity: true)
         bufferLock.unlock()
-        let engine = AVAudioEngine()
 
+        let engine = audioEngine
         let inputNode = engine.inputNode
         let hardwareFormat = inputNode.outputFormat(forBus: 0)
 
@@ -100,14 +105,13 @@ final class AudioRecorder {
         engine.prepare()
         try engine.start()
 
-        audioEngine = engine
         isRecording = true
     }
 
     func stopRecording() -> [Float] {
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine?.stop()
-        audioEngine = nil
+        let engine = audioEngine
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
         isRecording = false
 
         bufferLock.lock()

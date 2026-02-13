@@ -2,95 +2,65 @@ import SwiftUI
 
 struct SettingsAISection: View {
     @Environment(AppState.self) private var appState
-    @State private var testResult: TestResult?
     @State private var isTesting = false
-    @State private var showModelDownloadSheet = false
-    @State private var selectedDownloadModel: String?
-
-    private enum TestResult {
-        case success
-        case failure(String)
-    }
 
     var body: some View {
         @Bindable var appState = appState
         let lang = appState.appLanguage
 
         VStack(spacing: DS.settingsSectionGap) {
-            // Enable toggle
+            // Enable toggle + Test Connection
             SettingsGroupCard {
-                HStack {
-                    Text(lang.enableAIEnhancement)
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color.textPrimary)
-                    Spacer()
-                    if !appState.isLLMConfigured && appState.enableLLMEnhancement {
-                        Text(lang.configureAPIFirst)
-                            .font(.system(size: 12))
-                            .foregroundStyle(.orange)
+                VStack(spacing: 0) {
+                    HStack {
+                        Text(lang.enableAIEnhancement)
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.textPrimary)
+                        Spacer()
+                        if !appState.isLLMConfigured && appState.enableLLMEnhancement {
+                            Text(lang.configureAPIFirst)
+                                .font(.system(size: 12))
+                                .foregroundStyle(.orange)
+                        }
+                        Toggle("", isOn: $appState.enableLLMEnhancement)
+                            .toggleStyle(.switch)
+                            .tint(Color.brand)
+                            .labelsHidden()
                     }
-                    Toggle("", isOn: $appState.enableLLMEnhancement)
-                        .toggleStyle(.switch)
-                        .tint(Color.brand)
-                        .labelsHidden()
-                }
-                .frame(height: DS.settingsRowHeight)
-                .padding(.horizontal, DS.settingsHPadding)
-            }
+                    .frame(height: DS.settingsRowHeight)
+                    .padding(.horizontal, DS.settingsHPadding)
 
+                    SettingsSeparator()
+
+                    HStack {
+                        Button(action: testConnection) {
+                            HStack(spacing: 6) {
+                                if isTesting {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                    Text(lang.testing)
+                                } else {
+                                    Image(systemName: "bolt.fill")
+                                        .font(.system(size: 12))
+                                    Text(lang.testConnection)
+                                }
+                            }
+                            .font(.system(size: 13, weight: .medium))
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color.brand)
+                        .disabled(isTesting)
+
+                        Spacer()
+                    }
+                    .frame(height: DS.settingsRowHeight)
+                    .padding(.horizontal, DS.settingsHPadding)
+                }
+            }
 
             // Ollama-specific UI
             if appState.llmProvider == .ollama {
                 ollamaSection
-            }
-
-            // Test Connection
-            SettingsGroupCard {
-                HStack {
-                    Button(action: testConnection) {
-                        HStack(spacing: 6) {
-                            if isTesting {
-                                ProgressView()
-                                    .controlSize(.small)
-                                Text(lang.testing)
-                            } else {
-                                Image(systemName: "bolt.fill")
-                                    .font(.system(size: 12))
-                                Text(lang.testConnection)
-                            }
-                        }
-                        .font(.system(size: 13, weight: .medium))
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.brand)
-                    .disabled(isTesting || !appState.isLLMConfigured)
-
-                    Spacer()
-
-                    if let result = testResult {
-                        switch result {
-                        case .success:
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
-                                Text(lang.testSuccess)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.green)
-                            }
-                        case .failure(let msg):
-                            HStack(spacing: 4) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.red)
-                                Text(msg)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.red)
-                                    .lineLimit(1)
-                            }
-                        }
-                    }
-                }
-                .frame(height: DS.settingsRowHeight)
-                .padding(.horizontal, DS.settingsHPadding)
             }
         }
     }
@@ -221,24 +191,49 @@ struct SettingsAISection: View {
                             Spacer()
 
                             if appState.installedOllamaModels.contains(model.name) {
-                                Text(lang.downloaded)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.green)
-                            } else if appState.isDownloadingOllamaModel && selectedDownloadModel == model.name {
+                                HStack(spacing: 8) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(.green)
+                                        Text(lang.downloaded)
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(.green)
+                                    }
+                                    Button {
+                                        Task {
+                                            await appState.deleteOllamaModel(model.name)
+                                        }
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .font(.system(size: 11))
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .foregroundStyle(.secondary)
+                                }
+                            } else if appState.isDownloadingOllamaModel && appState.downloadingOllamaModelName == model.name {
                                 HStack(spacing: 8) {
                                     ProgressView(value: appState.ollamaModelDownloadProgress)
-                                        .frame(width: 60)
+                                        .frame(width: 80)
+                                        .tint(Color.brand)
                                     Text("\(Int(appState.ollamaModelDownloadProgress * 100))%")
-                                        .font(.system(size: 11))
+                                        .font(.system(size: 12, weight: .medium))
                                         .foregroundStyle(.secondary)
-                                        .frame(width: 35)
+                                        .monospacedDigit()
+                                        .frame(width: 36, alignment: .trailing)
                                 }
                             } else {
-                                Button(lang.downloadModel) {
-                                    selectedDownloadModel = model.name
+                                Button {
                                     Task {
                                         await appState.downloadOllamaModel(model.name)
                                     }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "arrow.down.circle")
+                                            .font(.system(size: 11))
+                                        Text(lang.downloadModel)
+                                    }
+                                    .font(.system(size: 12, weight: .medium))
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .tint(Color.brand)
@@ -256,12 +251,12 @@ struct SettingsAISection: View {
 
     private func testConnection() {
         isTesting = true
-        testResult = nil
 
         let provider = appState.llmProvider
         let apiKey = appState.llmApiKey
         let model = appState.llmModel
         let endpoint = appState.llmEndpoint
+        let lang = appState.appLanguage
         let service = LLMService()
 
         Task {
@@ -273,14 +268,18 @@ struct SettingsAISection: View {
                     endpoint: endpoint
                 )
                 await MainActor.run {
-                    testResult = .success
+                    appState.showSuccess(lang.testSuccess)
                     isTesting = false
                 }
             } catch {
                 await MainActor.run {
-                    testResult = .failure(error.localizedDescription)
+                    appState.showError(error.localizedDescription)
                     isTesting = false
                 }
+            }
+            // Refresh Ollama status so UI reflects actual state
+            if provider == .ollama {
+                await appState.refreshOllamaStatus()
             }
         }
     }

@@ -28,10 +28,6 @@ struct SettingsGeneralSection: View {
                 SettingsToggleRow(label: lang.launchAtLogin, isOn: $appState.launchAtLogin)
                 SettingsSeparator()
                 SettingsToggleRow(label: lang.soundFeedback, isOn: $appState.soundFeedback)
-                SettingsSeparator()
-                SettingsToggleRow(label: lang.autoPunctuation, isOn: $appState.autoPunctuation)
-                SettingsSeparator()
-                SettingsToggleRow(label: lang.showInDock, isOn: $appState.showInDock)
         }
     }
 }

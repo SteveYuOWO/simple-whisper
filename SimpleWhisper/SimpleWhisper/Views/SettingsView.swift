@@ -46,11 +46,6 @@ struct SettingsView: View {
                 }
 
                 Spacer()
-
-                Text("v0.1.0")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.textTertiary)
-                    .padding(.horizontal, 8)
             }
             .padding(EdgeInsets(top: 20, leading: 12, bottom: 20, trailing: 12))
             .frame(width: DS.settingsSidebarWidth)
@@ -72,6 +67,8 @@ struct SettingsView: View {
                     SettingsInputSection()
                 case .ai:
                     SettingsAISection()
+                case .history:
+                    SettingsHistorySection()
                 }
 
                 Spacer()

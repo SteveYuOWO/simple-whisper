@@ -10,10 +10,11 @@ final class FloatingPanelController {
         self.appState = appState
     }
 
-    /// Start observing transcription state and error state to auto-show/hide the panel.
+    /// Start observing transcription state, error state, and success state to auto-show/hide the panel.
     func startObservingState() {
         observeTranscriptionState()
         observeErrorState()
+        observeSuccessState()
     }
 
     private func observeTranscriptionState() {
@@ -38,8 +39,19 @@ final class FloatingPanelController {
         }
     }
 
+    private func observeSuccessState() {
+        withObservationTracking {
+            _ = appState.successMessage
+        } onChange: {
+            DispatchQueue.main.async { [weak self] in
+                self?.handleStateChange()
+                self?.observeSuccessState()
+            }
+        }
+    }
+
     private func handleStateChange() {
-        let hasContent = appState.transcriptionState != .idle || appState.errorMessage != nil
+        let hasContent = appState.transcriptionState != .idle || appState.errorMessage != nil || appState.successMessage != nil
         if hasContent {
             show()
         } else {
@@ -69,6 +81,7 @@ final class FloatingPanelController {
         panel.backgroundColor = .clear
         panel.hasShadow = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.ignoresMouseEvents = true
         panel.isMovableByWindowBackground = false
         panel.hidesOnDeactivate = false
 

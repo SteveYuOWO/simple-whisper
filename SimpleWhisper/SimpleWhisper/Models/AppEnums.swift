@@ -69,7 +69,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 }
 
 enum SettingsTab: CaseIterable, Identifiable {
-    case input, general, model, ai
+    case input, general, model, ai, history
 
     var id: Self { self }
 
@@ -79,6 +79,7 @@ enum SettingsTab: CaseIterable, Identifiable {
         case .model:   return "cpu"
         case .input:   return "mic"
         case .ai:      return "sparkles"
+        case .history: return "clock.arrow.circlepath"
         }
     }
 
@@ -92,6 +93,8 @@ enum SettingsTab: CaseIterable, Identifiable {
         case (.input, .zh):   return "输入"
         case (.ai, .en):      return "AI Enhance"
         case (.ai, .zh):      return "AI 优化"
+        case (.history, .en): return "History"
+        case (.history, .zh): return "历史记录"
         }
     }
 }

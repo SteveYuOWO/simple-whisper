@@ -1,15 +1,23 @@
 import Foundation
 
+struct TranscriptionRecord: Codable, Identifiable {
+    let id: UUID
+    let timestamp: Date
+    let text: String
+    let audioDuration: TimeInterval
+    let processingTime: TimeInterval
+    let wordCount: Int
+}
+
 struct AppConfig: Codable {
     var selectedModel: String = WhisperModel.base.rawValue
     var selectedLanguage: String = Language.auto.rawValue
     var appLanguage: String = AppLanguage.en.rawValue
     var launchAtLogin: Bool = true
     var soundFeedback: Bool = true
-    var autoPunctuation: Bool = true
-    var showInDock: Bool = false
     var selectedMicrophone: String = "Default"
     var hotkeyModifiers: [String] = ["fn", "control"]
+    var hotkeyKeyCode: Int = -1
 
     // LLM Enhancement
     var enableLLMEnhancement: Bool = false
@@ -25,6 +33,7 @@ final class ConfigManager {
     private let baseDirectory: URL
     let modelsDirectory: URL
     private let configFileURL: URL
+    private let historyFileURL: URL
 
     private(set) var config: AppConfig
 
@@ -33,6 +42,7 @@ final class ConfigManager {
         baseDirectory = home.appendingPathComponent(".simple-whisper")
         modelsDirectory = baseDirectory.appendingPathComponent("models")
         configFileURL = baseDirectory.appendingPathComponent("config.json")
+        historyFileURL = baseDirectory.appendingPathComponent("history.json")
 
         // Ensure directories exist
         try? FileManager.default.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
@@ -77,5 +87,26 @@ final class ConfigManager {
         if FileManager.default.fileExists(atPath: folder.path) {
             try FileManager.default.removeItem(at: folder)
         }
+    }
+
+    // MARK: - History
+
+    private static let maxHistoryRecords = 100
+
+    func loadHistory() -> [TranscriptionRecord] {
+        guard let data = try? Data(contentsOf: historyFileURL) else { return [] }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return (try? decoder.decode([TranscriptionRecord].self, from: data)) ?? []
+    }
+
+    func saveHistory(_ records: [TranscriptionRecord]) {
+        let trimmed = records.count > Self.maxHistoryRecords
+            ? Array(records.suffix(Self.maxHistoryRecords))
+            : records
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(trimmed) else { return }
+        try? data.write(to: historyFileURL, options: .atomic)
     }
 }

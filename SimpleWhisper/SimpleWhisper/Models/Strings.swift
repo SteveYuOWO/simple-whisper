@@ -17,18 +17,6 @@ extension AppLanguage {
         case .zh: "声音反馈"
         }
     }
-    var autoPunctuation: String {
-        switch self {
-        case .en: "Auto Punctuation"
-        case .zh: "自动标点"
-        }
-    }
-    var showInDock: String {
-        switch self {
-        case .en: "Show in Dock"
-        case .zh: "在 Dock 中显示"
-        }
-    }
     var language: String {
         switch self {
         case .en: "Language"
@@ -113,12 +101,6 @@ extension AppLanguage {
         case .zh: "快捷键"
         }
     }
-    var holdToRecord: String {
-        switch self {
-        case .en: "Hold to record"
-        case .zh: "按住录音"
-        }
-    }
     var permissionRequired: String {
         switch self {
         case .en: "Accessibility Permission Required"
@@ -155,16 +137,46 @@ extension AppLanguage {
         case .zh: "申请权限"
         }
     }
-    var pressModifierKeys: String {
+    var pressAnyKeys: String {
         switch self {
-        case .en: "Press modifier keys..."
-        case .zh: "请按下修饰键..."
+        case .en: "Press any key combination..."
+        case .zh: "请按下任意按键组合..."
         }
     }
     var accessibilityPermission: String {
         switch self {
         case .en: "Accessibility"
         case .zh: "辅助功能"
+        }
+    }
+    var clickToChange: String {
+        switch self {
+        case .en: "Click to change"
+        case .zh: "点击更改"
+        }
+    }
+    var testInput: String {
+        switch self {
+        case .en: "Test Input"
+        case .zh: "测试输入"
+        }
+    }
+    var testInputPlaceholder: String {
+        switch self {
+        case .en: "Type here to test your input..."
+        case .zh: "在此输入以测试..."
+        }
+    }
+    var recordingHotkey: String {
+        switch self {
+        case .en: "Recording Hotkey\u{2026}"
+        case .zh: "正在录制快捷键\u{2026}"
+        }
+    }
+    var save: String {
+        switch self {
+        case .en: "Save"
+        case .zh: "保存"
         }
     }
 
@@ -303,6 +315,45 @@ extension AppLanguage {
         switch self {
         case .en: "Testing\u{2026}"
         case .zh: "测试中\u{2026}"
+        }
+    }
+
+    // MARK: Settings - History
+
+    var history: String {
+        switch self {
+        case .en: "History"
+        case .zh: "历史记录"
+        }
+    }
+    var clearHistory: String {
+        switch self {
+        case .en: "Clear History"
+        case .zh: "清空历史"
+        }
+    }
+    var noHistory: String {
+        switch self {
+        case .en: "No transcription history"
+        case .zh: "暂无转录历史"
+        }
+    }
+    var copied: String {
+        switch self {
+        case .en: "Copied"
+        case .zh: "已复制"
+        }
+    }
+    var deleteRecord: String {
+        switch self {
+        case .en: "Delete"
+        case .zh: "删除"
+        }
+    }
+    var confirmClearHistory: String {
+        switch self {
+        case .en: "Are you sure?"
+        case .zh: "确定清空？"
         }
     }
 

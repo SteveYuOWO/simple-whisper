@@ -7,6 +7,11 @@ struct FloatingPillView: View {
 
     var body: some View {
         VStack(spacing: 8) {
+            if let successMessage = appState.successMessage {
+                successPill(message: successMessage)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+
             if let errorMessage = appState.errorMessage {
                 errorPill(message: errorMessage)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -33,6 +38,21 @@ struct FloatingPillView: View {
         .fixedSize()
         .animation(.spring(duration: 0.3), value: appState.transcriptionState)
         .animation(.spring(duration: 0.3), value: appState.errorMessage)
+        .animation(.spring(duration: 0.3), value: appState.successMessage)
+    }
+
+    // MARK: - Success
+
+    private func successPill(message: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 15))
+                .foregroundStyle(Color.success)
+            Text(message)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.9))
+        }
+        .pillStyle()
     }
 
     // MARK: - Error

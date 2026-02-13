@@ -6,25 +6,36 @@ final class HotkeyManager {
     var onKeyDown: (() -> Void)?
     var onKeyUp: (() -> Void)?
 
-    // "Fn" is unreliable across keyboards / macOS versions when using CGEvent flagsChanged:
-    // Some setups emit a flagsChanged event for Fn but do NOT include maskSecondaryFn in event.flags.
-    // Track Fn state separately with a fallback toggle based on the Function key's keycode.
-    private(set) var requiredModifiers: CGEventFlags = [.maskSecondaryFn, .maskControl]
+    // Required modifiers
     private var requiresFn = true
     private var requiresControl = true
     private var requiresOption = false
     private var requiresCommand = false
     private var requiresShift = false
 
+    // Required regular key (-1 = none, modifiers only)
+    private var requiredKeyCode: Int64 = -1
+
+    // "Fn" is unreliable across keyboards / macOS versions when using CGEvent flagsChanged:
+    // Some setups emit a flagsChanged event for Fn but do NOT include maskSecondaryFn in event.flags.
+    // Track Fn state separately with a fallback toggle based on the Function key's keycode.
     private var fnDown = false
     private var fnFlagReliable = false
 
-    private var modifierMonitorCallback: (([String]) -> Void)?
-    private var isMonitoring = false
+    // Regular key tracking for hotkey detection
+    private var isRequiredKeyHeld = false
+
+    // Monitor mode state
+    private var modifierMonitorCallback: (([String], Int64) -> Void)?
+    // Accessed from event tap thread — use atomic-like volatile reads.
+    // In practice, Bool assignment on Apple platforms is safe for this flag pattern.
+    fileprivate var isMonitoring = false
+    private var monitorCurrentKey: Int64 = -1
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var isHotkeyPressed = false
+    private var lastReEnableTime: CFAbsoluteTime = 0
 
     static func isAccessibilityGranted() -> Bool {
         AXIsProcessTrusted()
@@ -44,7 +55,10 @@ final class HotkeyManager {
             return
         }
 
-        let mask: CGEventMask = (1 << CGEventType.flagsChanged.rawValue)
+        let mask: CGEventMask =
+            (1 << CGEventType.flagsChanged.rawValue) |
+            (1 << CGEventType.keyDown.rawValue) |
+            (1 << CGEventType.keyUp.rawValue)
 
         let observer = Unmanaged.passRetained(self).toOpaque()
 
@@ -79,65 +93,74 @@ final class HotkeyManager {
         eventTap = nil
         runLoopSource = nil
         isHotkeyPressed = false
+        isRequiredKeyHeld = false
         fnDown = false
         fnFlagReliable = false
+        monitorCurrentKey = -1
     }
 
-    func startModifierMonitor(callback: @escaping ([String]) -> Void) {
+    func startMonitor(callback: @escaping ([String], Int64) -> Void) {
         isMonitoring = true
+        monitorCurrentKey = -1
         modifierMonitorCallback = callback
         start()
     }
 
-    func stopModifierMonitor() {
+    func stopMonitor() {
         isMonitoring = false
         modifierMonitorCallback = nil
+        monitorCurrentKey = -1
         stop()
     }
 
-    func updateModifiers(from modifierStrings: [String]) {
-        var flags: CGEventFlags = []
+    func updateHotkey(modifiers: [String], keyCode: Int) {
         var reqFn = false
         var reqControl = false
         var reqOption = false
         var reqCommand = false
         var reqShift = false
 
-        for mod in modifierStrings {
+        for mod in modifiers {
             switch mod {
-            case "fn":
-                flags.insert(.maskSecondaryFn)
-                reqFn = true
-            case "control":
-                flags.insert(.maskControl)
-                reqControl = true
-            case "option":
-                flags.insert(.maskAlternate)
-                reqOption = true
-            case "command":
-                flags.insert(.maskCommand)
-                reqCommand = true
-            case "shift":
-                flags.insert(.maskShift)
-                reqShift = true
+            case "fn": reqFn = true
+            case "control": reqControl = true
+            case "option": reqOption = true
+            case "command": reqCommand = true
+            case "shift": reqShift = true
             default: break
             }
         }
 
-        requiredModifiers = flags
         requiresFn = reqFn
         requiresControl = reqControl
         requiresOption = reqOption
         requiresCommand = reqCommand
         requiresShift = reqShift
+        requiredKeyCode = Int64(keyCode)
 
         // Reset latch state so changing modifiers doesn't keep recording "stuck".
         isHotkeyPressed = false
+        isRequiredKeyHeld = false
         fnDown = false
         fnFlagReliable = false
     }
 
-    fileprivate func handleFlagsChanged(_ event: CGEvent) {
+    // MARK: - Event Handling
+
+    fileprivate func handleEvent(_ event: CGEvent, type: CGEventType) {
+        switch type {
+        case .flagsChanged:
+            handleFlagsChanged(event)
+        case .keyDown:
+            handleKeyDown(event)
+        case .keyUp:
+            handleKeyUp(event)
+        default:
+            break
+        }
+    }
+
+    private func handleFlagsChanged(_ event: CGEvent) {
         let flags = event.flags
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
 
@@ -153,30 +176,102 @@ final class HotkeyManager {
         if fnFlagReliable {
             fnDown = fnFlag
         } else if keyCode == Int64(kVK_Function) {
-            // Fallback: if Fn generates flagsChanged events but doesn't update flags, toggling keeps state correct.
             fnDown.toggle()
         }
 
-        // Modifier monitor mode: report all currently pressed modifiers
         if isMonitoring {
-            var currentModifiers: [String] = []
-            if fnDown { currentModifiers.append("fn") }
-            if controlDown { currentModifiers.append("control") }
-            if optionDown { currentModifiers.append("option") }
-            if commandDown { currentModifiers.append("command") }
-            if shiftDown { currentModifiers.append("shift") }
-            modifierMonitorCallback?(currentModifiers)
+            reportMonitorState(from: event)
             return
         }
 
-        let matched =
+        checkHotkeyState(
+            controlDown: controlDown,
+            optionDown: optionDown,
+            commandDown: commandDown,
+            shiftDown: shiftDown
+        )
+    }
+
+    private func handleKeyDown(_ event: CGEvent) {
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+
+        if isMonitoring {
+            if !isRepeat {
+                monitorCurrentKey = keyCode
+                reportMonitorState(from: event)
+            }
+            return
+        }
+
+        if !isRepeat && keyCode == requiredKeyCode {
+            isRequiredKeyHeld = true
+            let flags = event.flags
+            checkHotkeyState(
+                controlDown: flags.contains(.maskControl),
+                optionDown: flags.contains(.maskAlternate),
+                commandDown: flags.contains(.maskCommand),
+                shiftDown: flags.contains(.maskShift)
+            )
+        }
+    }
+
+    private func handleKeyUp(_ event: CGEvent) {
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+
+        if isMonitoring {
+            if keyCode == monitorCurrentKey {
+                monitorCurrentKey = -1
+            }
+            reportMonitorState(from: event)
+            return
+        }
+
+        if keyCode == requiredKeyCode {
+            isRequiredKeyHeld = false
+            let flags = event.flags
+            checkHotkeyState(
+                controlDown: flags.contains(.maskControl),
+                optionDown: flags.contains(.maskAlternate),
+                commandDown: flags.contains(.maskCommand),
+                shiftDown: flags.contains(.maskShift)
+            )
+        }
+    }
+
+    private func reportMonitorState(from event: CGEvent) {
+        let flags = event.flags
+        var currentModifiers: [String] = []
+        if fnDown { currentModifiers.append("fn") }
+        if flags.contains(.maskControl) { currentModifiers.append("control") }
+        if flags.contains(.maskAlternate) { currentModifiers.append("option") }
+        if flags.contains(.maskCommand) { currentModifiers.append("command") }
+        if flags.contains(.maskShift) { currentModifiers.append("shift") }
+        modifierMonitorCallback?(currentModifiers, monitorCurrentKey)
+    }
+
+    private func checkHotkeyState(
+        controlDown: Bool,
+        optionDown: Bool,
+        commandDown: Bool,
+        shiftDown: Bool
+    ) {
+        let modifiersMatch =
             (!requiresFn || fnDown) &&
             (!requiresControl || controlDown) &&
             (!requiresOption || optionDown) &&
             (!requiresCommand || commandDown) &&
             (!requiresShift || shiftDown)
 
-        if matched && !isHotkeyPressed {
+        let keyMatch = (requiredKeyCode == -1) || isRequiredKeyHeld
+
+        let matched = modifiersMatch && keyMatch
+
+        // Must have at least one requirement
+        let hasRequirement = requiresFn || requiresControl || requiresOption ||
+            requiresCommand || requiresShift || requiredKeyCode != -1
+
+        if matched && hasRequirement && !isHotkeyPressed {
             isHotkeyPressed = true
             print("[HotkeyManager] Hotkey DOWN detected")
             onKeyDown?()
@@ -188,9 +283,143 @@ final class HotkeyManager {
     }
 
     fileprivate func reEnableTapIfNeeded() {
+        // Throttle re-enable to avoid flooding the main queue when the tap
+        // keeps getting disabled (e.g. main thread momentarily busy with audio).
+        let now = CFAbsoluteTimeGetCurrent()
+        guard now - lastReEnableTime > 0.3 else { return }
+        lastReEnableTime = now
+
         if let tap = eventTap {
             CGEvent.tapEnable(tap: tap, enable: true)
-            print("[HotkeyManager] Re-enabled event tap after timeout")
+
+            // Reset pressed state — we may have missed key-up events while
+            // the tap was disabled, which would leave isHotkeyPressed stuck.
+            if isHotkeyPressed {
+                isHotkeyPressed = false
+                isRequiredKeyHeld = false
+                fnDown = false
+                fnFlagReliable = false
+                print("[HotkeyManager] Re-enabled event tap after timeout (reset stuck hotkey state)")
+                // Fire onKeyUp so AppState can clean up any in-progress recording
+                onKeyUp?()
+            } else {
+                print("[HotkeyManager] Re-enabled event tap after timeout")
+            }
+        }
+    }
+
+    // MARK: - Key Code Display Name
+
+    static func keyCodeToDisplayName(_ keyCode: Int) -> String {
+        switch keyCode {
+        // Letters
+        case kVK_ANSI_A: return "A"
+        case kVK_ANSI_B: return "B"
+        case kVK_ANSI_C: return "C"
+        case kVK_ANSI_D: return "D"
+        case kVK_ANSI_E: return "E"
+        case kVK_ANSI_F: return "F"
+        case kVK_ANSI_G: return "G"
+        case kVK_ANSI_H: return "H"
+        case kVK_ANSI_I: return "I"
+        case kVK_ANSI_J: return "J"
+        case kVK_ANSI_K: return "K"
+        case kVK_ANSI_L: return "L"
+        case kVK_ANSI_M: return "M"
+        case kVK_ANSI_N: return "N"
+        case kVK_ANSI_O: return "O"
+        case kVK_ANSI_P: return "P"
+        case kVK_ANSI_Q: return "Q"
+        case kVK_ANSI_R: return "R"
+        case kVK_ANSI_S: return "S"
+        case kVK_ANSI_T: return "T"
+        case kVK_ANSI_U: return "U"
+        case kVK_ANSI_V: return "V"
+        case kVK_ANSI_W: return "W"
+        case kVK_ANSI_X: return "X"
+        case kVK_ANSI_Y: return "Y"
+        case kVK_ANSI_Z: return "Z"
+        // Numbers
+        case kVK_ANSI_0: return "0"
+        case kVK_ANSI_1: return "1"
+        case kVK_ANSI_2: return "2"
+        case kVK_ANSI_3: return "3"
+        case kVK_ANSI_4: return "4"
+        case kVK_ANSI_5: return "5"
+        case kVK_ANSI_6: return "6"
+        case kVK_ANSI_7: return "7"
+        case kVK_ANSI_8: return "8"
+        case kVK_ANSI_9: return "9"
+        // Function keys
+        case kVK_F1: return "F1"
+        case kVK_F2: return "F2"
+        case kVK_F3: return "F3"
+        case kVK_F4: return "F4"
+        case kVK_F5: return "F5"
+        case kVK_F6: return "F6"
+        case kVK_F7: return "F7"
+        case kVK_F8: return "F8"
+        case kVK_F9: return "F9"
+        case kVK_F10: return "F10"
+        case kVK_F11: return "F11"
+        case kVK_F12: return "F12"
+        case kVK_F13: return "F13"
+        case kVK_F14: return "F14"
+        case kVK_F15: return "F15"
+        case kVK_F16: return "F16"
+        case kVK_F17: return "F17"
+        case kVK_F18: return "F18"
+        case kVK_F19: return "F19"
+        case kVK_F20: return "F20"
+        // Special keys
+        case kVK_Space: return "Space"
+        case kVK_Return: return "\u{21A9}"       // ↩
+        case kVK_Tab: return "\u{21E5}"           // ⇥
+        case kVK_Delete: return "\u{232B}"        // ⌫
+        case kVK_ForwardDelete: return "\u{2326}" // ⌦
+        case kVK_Escape: return "\u{238B}"        // ⎋
+        // Arrow keys
+        case kVK_UpArrow: return "\u{2191}"       // ↑
+        case kVK_DownArrow: return "\u{2193}"     // ↓
+        case kVK_LeftArrow: return "\u{2190}"     // ←
+        case kVK_RightArrow: return "\u{2192}"    // →
+        // Navigation
+        case kVK_Home: return "\u{2196}"          // ↖
+        case kVK_End: return "\u{2198}"           // ↘
+        case kVK_PageUp: return "\u{21DE}"        // ⇞
+        case kVK_PageDown: return "\u{21DF}"      // ⇟
+        // Symbols
+        case kVK_ANSI_Minus: return "-"
+        case kVK_ANSI_Equal: return "="
+        case kVK_ANSI_LeftBracket: return "["
+        case kVK_ANSI_RightBracket: return "]"
+        case kVK_ANSI_Backslash: return "\\"
+        case kVK_ANSI_Semicolon: return ";"
+        case kVK_ANSI_Quote: return "'"
+        case kVK_ANSI_Comma: return ","
+        case kVK_ANSI_Period: return "."
+        case kVK_ANSI_Slash: return "/"
+        case kVK_ANSI_Grave: return "`"
+        // Numpad
+        case kVK_ANSI_Keypad0: return "Num0"
+        case kVK_ANSI_Keypad1: return "Num1"
+        case kVK_ANSI_Keypad2: return "Num2"
+        case kVK_ANSI_Keypad3: return "Num3"
+        case kVK_ANSI_Keypad4: return "Num4"
+        case kVK_ANSI_Keypad5: return "Num5"
+        case kVK_ANSI_Keypad6: return "Num6"
+        case kVK_ANSI_Keypad7: return "Num7"
+        case kVK_ANSI_Keypad8: return "Num8"
+        case kVK_ANSI_Keypad9: return "Num9"
+        case kVK_ANSI_KeypadDecimal: return "Num."
+        case kVK_ANSI_KeypadMultiply: return "Num*"
+        case kVK_ANSI_KeypadPlus: return "Num+"
+        case kVK_ANSI_KeypadMinus: return "Num-"
+        case kVK_ANSI_KeypadDivide: return "Num/"
+        case kVK_ANSI_KeypadEquals: return "Num="
+        case kVK_ANSI_KeypadEnter: return "Num\u{21A9}"
+        case kVK_ANSI_KeypadClear: return "NumClr"
+        default: return "Key(\(keyCode))"
         }
     }
 
@@ -217,7 +446,13 @@ private func hotkeyCallback(
     }
 
     DispatchQueue.main.async {
-        manager.handleFlagsChanged(event)
+        manager.handleEvent(event, type: type)
+    }
+
+    // In monitor (hotkey recording) mode, consume all key events so macOS
+    // doesn't play the system alert sound for "unhandled" key presses.
+    if manager.isMonitoring {
+        return nil
     }
 
     return Unmanaged.passUnretained(event)
