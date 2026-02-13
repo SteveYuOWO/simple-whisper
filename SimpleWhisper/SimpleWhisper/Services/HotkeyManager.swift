@@ -35,7 +35,12 @@ final class HotkeyManager {
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var isHotkeyPressed = false
-    private var lastReEnableTime: CFAbsoluteTime = 0
+
+    // Dedicated background thread for the event tap so it is never starved
+    // by heavy main-thread work (SwiftUI layout, audio I/O, Whisper inference).
+    private var tapThread: Thread?
+    private var tapRunLoop: CFRunLoop?
+    private let tapThreadReady = DispatchSemaphore(value: 0)
 
     static func isAccessibilityGranted() -> Bool {
         AXIsProcessTrusted()
@@ -79,17 +84,41 @@ final class HotkeyManager {
 
         let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         runLoopSource = source
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
-        print("[HotkeyManager] Event tap started successfully.")
+
+        // Run the event tap on a dedicated background thread so macOS never
+        // disables it due to the main thread being temporarily busy.
+        let thread = Thread { [weak self] in
+            let rl = CFRunLoopGetCurrent()!
+            self?.tapRunLoop = rl
+            CFRunLoopAddSource(rl, source, .commonModes)
+            CGEvent.tapEnable(tap: tap, enable: true)
+            // Keep RunLoop alive even after the tap source is removed during stop().
+            var ctx = CFRunLoopSourceContext()
+            let dummy = CFRunLoopSourceCreate(nil, 0, &ctx)
+            CFRunLoopAddSource(rl, dummy, .commonModes)
+            self?.tapThreadReady.signal()
+            CFRunLoopRun()
+        }
+        thread.name = "com.simplewhisper.EventTap"
+        thread.qualityOfService = .userInteractive
+        thread.start()
+        tapThread = thread
+        tapThreadReady.wait()
+        print("[HotkeyManager] Event tap started on dedicated thread.")
     }
 
     func stop() {
         guard let tap = eventTap else { return }
         CGEvent.tapEnable(tap: tap, enable: false)
-        if let source = runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
+        if let rl = tapRunLoop {
+            if let source = runLoopSource {
+                CFRunLoopRemoveSource(rl, source, .commonModes)
+            }
+            CFRunLoopStop(rl)
         }
+        tapThread?.cancel()
+        tapThread = nil
+        tapRunLoop = nil
         eventTap = nil
         runLoopSource = nil
         isHotkeyPressed = false
@@ -282,28 +311,22 @@ final class HotkeyManager {
         }
     }
 
+    /// Called directly on the tap thread (not main) to re-enable a timed-out tap
+    /// as fast as possible. State reset is dispatched to main for thread safety.
     fileprivate func reEnableTapIfNeeded() {
-        // Throttle re-enable to avoid flooding the main queue when the tap
-        // keeps getting disabled (e.g. main thread momentarily busy with audio).
-        let now = CFAbsoluteTimeGetCurrent()
-        guard now - lastReEnableTime > 0.3 else { return }
-        lastReEnableTime = now
+        guard let tap = eventTap else { return }
+        // CGEvent.tapEnable is thread-safe — call it immediately on the tap
+        // thread so re-enabling is never blocked by a busy main thread.
+        CGEvent.tapEnable(tap: tap, enable: true)
 
-        if let tap = eventTap {
-            CGEvent.tapEnable(tap: tap, enable: true)
-
-            // Reset pressed state — we may have missed key-up events while
-            // the tap was disabled, which would leave isHotkeyPressed stuck.
-            if isHotkeyPressed {
-                isHotkeyPressed = false
-                isRequiredKeyHeld = false
-                fnDown = false
-                fnFlagReliable = false
-                print("[HotkeyManager] Re-enabled event tap after timeout (reset stuck hotkey state)")
-                // Fire onKeyUp so AppState can clean up any in-progress recording
-                onKeyUp?()
-            } else {
-                print("[HotkeyManager] Re-enabled event tap after timeout")
+        DispatchQueue.main.async { [self] in
+            if self.isHotkeyPressed {
+                self.isHotkeyPressed = false
+                self.isRequiredKeyHeld = false
+                self.fnDown = false
+                self.fnFlagReliable = false
+                print("[HotkeyManager] Re-enabled event tap (reset stuck hotkey state)")
+                self.onKeyUp?()
             }
         }
     }
@@ -439,9 +462,9 @@ private func hotkeyCallback(
     let manager = Unmanaged<HotkeyManager>.fromOpaque(refcon).takeUnretainedValue()
 
     if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-        DispatchQueue.main.async {
-            manager.reEnableTapIfNeeded()
-        }
+        // Re-enable directly on the tap thread — never dispatch to main,
+        // because the whole point is that main may be temporarily blocked.
+        manager.reEnableTapIfNeeded()
         return Unmanaged.passUnretained(event)
     }
 
