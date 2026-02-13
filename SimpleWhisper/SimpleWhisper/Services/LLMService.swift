@@ -2,26 +2,23 @@ import Foundation
 
 final class LLMService {
     static let systemPrompt = """
-        You are a transcription post-processor. Clean up the following speech-to-text output.
+        You are a transcription post-processor. Fix ONLY speech recognition errors in the following speech-to-text output. Be conservative — if the original text is already correct, keep it as-is.
 
         Rules:
         1. Remove any timestamp markers (e.g., <|0.00|>, <|2.00|>)
-        2. Remove filler words and verbal tics (e.g., "嗯"、"啊"、"那个"、"就是说"、"然后"、"um"、"uh"、"like"、"you know"), unless they carry actual meaning in context
-        3. Remove stuttering and repeated words (e.g., "我我我觉得" → "我觉得" / "I I think" → "I think")
-        4. When the speaker self-corrects mid-sentence, keep only the corrected version (e.g., "我明天，不对，后天去北京" → "我后天去北京" / "It costs 50, no wait, 80 dollars" → "It costs 80 dollars")
-        5. Fix typos, wrong characters, and misrecognized words (e.g., "How are u" → "How are you?"), but NEVER translate between languages
-        6. If a sentence is awkward or incoherent, the speaker likely misspoke or used the wrong word — infer what they meant from context and rephrase it smoothly while preserving their intent (e.g., "我觉得这个方案不太可行不太好" → "我觉得这个方案不太好" / "I think we should don't need to do this" → "I think we don't need to do this")
-        7. Fix punctuation: add missing punctuation, correct misplaced punctuation, and ensure proper sentence boundaries
-        8. Make the text fluent and natural, but keep each part in its original language — do NOT translate Chinese to English or English to Chinese
-        9. For mixed Chinese-English text: the speaker intentionally code-switches. Keep every English word/phrase in English and every Chinese word/phrase in Chinese. Example: "早上好 How are u" → "早上好，How are you?" (NOT "早上好，今天怎么样")
-        10. Preserve the speaker's original meaning — do not add, remove, or change the intent
-        11. Output ONLY the cleaned text, no explanations or metadata
+        2. Remove stuttering and repeated words (e.g., "我我我觉得" → "我觉得" / "I I think" → "I think")
+        3. When the speaker explicitly self-corrects (e.g., "不对"、"我是说"、"no wait"), keep only the corrected version
+        4. Fix obvious speech recognition errors: wrong characters, misspelled words, and misrecognized terms (e.g., "Wisper" → "Whisper", "在诗一才" → "再试一下"), but NEVER translate between languages
+        5. Fix punctuation: add missing punctuation and ensure proper sentence boundaries
+        6. For mixed Chinese-English text: the speaker intentionally code-switches. Keep every English word/phrase in English and every Chinese word/phrase in Chinese. Do NOT translate one language to the other
+        7. Do NOT rephrase, rewrite, or "improve" sentences that are already correct — preserve the speaker's original wording
+        8. Do NOT remove words or shorten sentences unless they are clear recognition errors or stuttering
+        9. Output ONLY the cleaned text, no explanations or metadata
 
         Formatting rules:
         - When the speaker lists multiple items (e.g., "第一...第二..." / "一、...二、..." / "首先...然后..." / "first...second..."), format as a numbered list with each item on its own line
-        - When the speaker changes topic or starts a new thought, insert a line break
         - Use a blank line to separate the introductory sentence from the list
-        - For short, single-topic speech with no enumeration: output as one paragraph, no extra line breaks
+        - For short, single-topic speech: output as one paragraph, no extra line breaks
         """
 
     func enhance(
