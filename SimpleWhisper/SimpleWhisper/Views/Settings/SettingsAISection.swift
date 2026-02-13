@@ -47,7 +47,7 @@ struct SettingsAISection: View {
                             }
                         }
                         .labelsHidden()
-                        .pickerStyle(.segmented)
+                        .pickerStyle(.menu)
                         .fixedSize()
                     }
                     .frame(height: DS.settingsRowHeight)
@@ -109,25 +109,19 @@ struct SettingsAISection: View {
 
                     // Test Connection
                     HStack {
-                        Button(action: testConnection) {
-                            HStack(spacing: 6) {
-                                if isTesting {
-                                    ProgressView()
-                                        .controlSize(.small)
-                                    Text(lang.testing)
-                                } else {
-                                    Image(systemName: "bolt.fill")
-                                        .font(.system(size: 12))
-                                    Text(lang.testConnection)
-                                }
-                            }
-                            .font(.system(size: 13, weight: .medium))
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(Color.brand)
-                        .disabled(isTesting || appState.llmApiKey.isEmpty)
-
                         Spacer()
+                        if isTesting {
+                            HStack(spacing: 6) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text(lang.testing)
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(Color.textSecondary)
+                            }
+                        } else {
+                            Button(lang.testConnection, action: testConnection)
+                                .disabled(appState.llmApiKey.isEmpty)
+                        }
                     }
                     .frame(height: DS.settingsRowHeight)
                     .padding(.horizontal, DS.settingsHPadding)
