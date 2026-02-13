@@ -2,7 +2,16 @@ import Foundation
 
 final class LLMService {
     static let systemPrompt = """
-        Clean up the speech-to-text transcription below. Remove filler words, fix punctuation, and correct obvious errors. Keep the original language and meaning. Output only the cleaned text.
+        You are a transcription post-processor. Clean up the following speech-to-text output:
+
+        Rules:
+        1. Remove any timestamp markers (e.g., <|0.00|>, <|2.00|>)
+        2. Fix typos, wrong characters, and misrecognized words
+        3. Make the text fluent and natural in the original language
+        4. For short speech: output as a single clean paragraph
+        5. For long speech with structured content: organize with numbered lists, headings, or paragraphs as appropriate
+        6. Preserve the speaker's original meaning — do not add, remove, or change the intent
+        7. Output ONLY the cleaned text, no explanations or metadata
         """
 
     func enhance(
@@ -12,15 +21,14 @@ final class LLMService {
         model: String,
         endpoint: String
     ) async throws -> String {
-        let ollamaEndpoint = endpoint.isEmpty ? "http://localhost:11434" : endpoint
-        return try await callOpenAICompatible(
-            text: text,
-            apiKey: apiKey,
-            model: model,
-            endpoint: ollamaEndpoint.hasSuffix("/v1/chat/completions")
-                ? ollamaEndpoint
-                : ollamaEndpoint.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/v1/chat/completions"
-        )
+        switch provider {
+        case .openai:
+            let url = endpoint.isEmpty ? provider.defaultEndpoint : endpoint
+            return try await callOpenAI(text: text, apiKey: apiKey, model: model, endpoint: url)
+        case .claude:
+            let url = endpoint.isEmpty ? provider.defaultEndpoint : endpoint
+            return try await callClaude(text: text, apiKey: apiKey, model: model, endpoint: url)
+        }
     }
 
     /// Test connectivity based on provider type
@@ -30,40 +38,17 @@ final class LLMService {
         model: String,
         endpoint: String
     ) async throws {
-        switch provider {
-        case .ollama:
-            // For Ollama: check installation, service status, and model availability
-            let ollamaManager = OllamaManager.shared
-
-            // 1. Check if Ollama service is reachable (covers both local and remote)
-            let running = await ollamaManager.isOllamaRunning()
-
-            if !running {
-                // Service not reachable — check if binary is installed locally
-                if !ollamaManager.checkOllamaInstalled() {
-                    throw LLMError.ollamaNotInstalled
-                }
-                throw LLMError.ollamaNotRunning
-            }
-
-            // 3. Check if the selected model exists
-            let installedModels = try await ollamaManager.listInstalledModels()
-            guard !installedModels.isEmpty else {
-                throw LLMError.noModelsInstalled
-            }
-
-            guard installedModels.contains(model) else {
-                throw LLMError.modelNotFound(model)
-            }
-
-            // Success: Ollama is ready
-            print("[LLMService] Ollama connection test passed: service running, model '\(model)' available")
+        guard !apiKey.isEmpty else {
+            throw LLMError.missingAPIKey
         }
+
+        let testText = "Hello, this is a test."
+        _ = try await enhance(text: testText, provider: provider, apiKey: apiKey, model: model, endpoint: endpoint)
     }
 
-    // MARK: - OpenAI-Compatible API
+    // MARK: - OpenAI API
 
-    private func callOpenAICompatible(
+    private func callOpenAI(
         text: String,
         apiKey: String,
         model: String,
@@ -76,13 +61,11 @@ final class LLMService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if !apiKey.isEmpty {
-            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        }
-        request.timeoutInterval = 60
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 30
 
         let body: [String: Any] = [
-            "model": model,
+            "model": model.isEmpty ? LLMProvider.openai.defaultModel : model,
             "messages": [
                 ["role": "system", "content": Self.systemPrompt],
                 ["role": "user", "content": text]
@@ -112,6 +95,54 @@ final class LLMService {
         return content.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    // MARK: - Claude (Anthropic) API
+
+    private func callClaude(
+        text: String,
+        apiKey: String,
+        model: String,
+        endpoint: String
+    ) async throws -> String {
+        guard let url = URL(string: endpoint) else {
+            throw LLMError.invalidEndpoint
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.timeoutInterval = 30
+
+        let body: [String: Any] = [
+            "model": model.isEmpty ? LLMProvider.claude.defaultModel : model,
+            "max_tokens": 4096,
+            "system": Self.systemPrompt,
+            "messages": [
+                ["role": "user", "content": text]
+            ]
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw LLMError.invalidResponse
+        }
+        guard httpResponse.statusCode == 200 else {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw LLMError.apiError(statusCode: httpResponse.statusCode, message: errorBody)
+        }
+
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let contentArray = json["content"] as? [[String: Any]],
+              let firstBlock = contentArray.first,
+              let content = firstBlock["text"] as? String else {
+            throw LLMError.invalidResponse
+        }
+
+        return content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 // MARK: - Errors
@@ -119,11 +150,8 @@ final class LLMService {
 enum LLMError: LocalizedError {
     case invalidEndpoint
     case invalidResponse
+    case missingAPIKey
     case apiError(statusCode: Int, message: String)
-    case ollamaNotInstalled
-    case ollamaNotRunning
-    case noModelsInstalled
-    case modelNotFound(String)
 
     var errorDescription: String? {
         switch self {
@@ -131,16 +159,10 @@ enum LLMError: LocalizedError {
             return "Invalid API endpoint URL"
         case .invalidResponse:
             return "Invalid response from API"
+        case .missingAPIKey:
+            return "API key is required"
         case .apiError(let statusCode, let message):
             return "API error (\(statusCode)): \(message)"
-        case .ollamaNotInstalled:
-            return "Ollama is not installed"
-        case .ollamaNotRunning:
-            return "Ollama service is not running"
-        case .noModelsInstalled:
-            return "No models installed"
-        case .modelNotFound(let model):
-            return "Model '\(model)' not found"
         }
     }
 }

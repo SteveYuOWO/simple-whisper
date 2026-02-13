@@ -5151,16 +5151,6 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "5pUeM",
-                      "name": "procArc",
-                      "fill": "#FFFFFFCC",
-                      "content": "Processing…",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    },
-                    {
                       "type": "ellipse",
                       "id": "AEY3p",
                       "name": "procSpinner",
@@ -5170,6 +5160,16 @@
                         "thickness": 2,
                         "fill": "#48484A"
                       }
+                    },
+                    {
+                      "type": "text",
+                      "id": "5pUeM",
+                      "name": "procArc",
+                      "fill": "#FFFFFFCC",
+                      "content": "Processing…",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
                     }
                   ]
                 }

@@ -269,12 +269,6 @@ extension AppLanguage {
         case .zh: "模型"
         }
     }
-    var endpoint: String {
-        switch self {
-        case .en: "Endpoint"
-        case .zh: "端点"
-        }
-    }
     var testConnection: String {
         switch self {
         case .en: "Test Connection"
@@ -315,6 +309,18 @@ extension AppLanguage {
         switch self {
         case .en: "Testing\u{2026}"
         case .zh: "测试中\u{2026}"
+        }
+    }
+    var estimatedMonthlyCost: String {
+        switch self {
+        case .en: "Est. monthly cost (1h/day)"
+        case .zh: "预估月成本（每天1小时）"
+        }
+    }
+    var perMonth: String {
+        switch self {
+        case .en: " /mo"
+        case .zh: " /月"
         }
     }
 
@@ -390,84 +396,4 @@ extension AppLanguage {
         }
     }
 
-    // MARK: Ollama Local Model
-
-    var ollamaNotInstalled: String {
-        switch self {
-        case .en: "Ollama not installed"
-        case .zh: "Ollama 未安装"
-        }
-    }
-    var installOllama: String {
-        switch self {
-        case .en: "Install Ollama"
-        case .zh: "安装 Ollama"
-        }
-    }
-    var ollamaInstalled: String {
-        switch self {
-        case .en: "Ollama installed"
-        case .zh: "Ollama 已安装"
-        }
-    }
-    var ollamaRunning: String {
-        switch self {
-        case .en: "Running"
-        case .zh: "运行中"
-        }
-    }
-    var ollamaNotRunning: String {
-        switch self {
-        case .en: "Not running"
-        case .zh: "未运行"
-        }
-    }
-    var startOllama: String {
-        switch self {
-        case .en: "Start Ollama"
-        case .zh: "启动 Ollama"
-        }
-    }
-    var startingOllama: String {
-        switch self {
-        case .en: "Starting\u{2026}"
-        case .zh: "启动中\u{2026}"
-        }
-    }
-    var selectModel: String {
-        switch self {
-        case .en: "Select Model"
-        case .zh: "选择模型"
-        }
-    }
-    var downloadLocalModel: String {
-        switch self {
-        case .en: "Download Model"
-        case .zh: "下载模型"
-        }
-    }
-    var localModelHint: String {
-        switch self {
-        case .en: "Small models are recommended for fast text enhancement"
-        case .zh: "推荐使用小模型以快速优化文本"
-        }
-    }
-    var noModelsInstalled: String {
-        switch self {
-        case .en: "No models installed"
-        case .zh: "未安装模型"
-        }
-    }
-    var installedModels: String {
-        switch self {
-        case .en: "Installed Models"
-        case .zh: "已安装模型"
-        }
-    }
-    var recommendedModels: String {
-        switch self {
-        case .en: "Recommended Models"
-        case .zh: "推荐模型"
-        }
-    }
 }

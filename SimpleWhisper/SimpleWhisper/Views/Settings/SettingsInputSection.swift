@@ -232,8 +232,8 @@ struct SettingsInputSection: View {
                             Text(lang.testInputPlaceholder)
                                 .font(.system(size: 14))
                                 .foregroundStyle(Color.textTertiary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 16)
+                                .padding(.horizontal, 13)
+                                .padding(.vertical, 12)
                                 .allowsHitTesting(false)
                         }
                     }

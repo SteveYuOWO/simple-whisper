@@ -8,13 +8,61 @@ enum TranscriptionState: Equatable {
     case done
 }
 
+struct LLMModelOption: Identifiable, Hashable {
+    let id: String          // API model ID
+    let displayName: String
+    let costEstimate: String // monthly cost at 1h/day
+    let isRecommended: Bool
+    let isMostAccurate: Bool
+
+    func label(_ lang: AppLanguage) -> String {
+        if isRecommended {
+            return "\(displayName)" + (lang == .en ? " (Recommended)" : "（推荐）")
+        } else if isMostAccurate {
+            return "\(displayName)" + (lang == .en ? " (Most Accurate)" : "（最精准）")
+        }
+        return displayName
+    }
+}
+
 enum LLMProvider: String, CaseIterable, Identifiable, Codable {
-    case ollama = "ollama"
+    case openai = "openai"
+    case claude = "claude"
 
     var id: String { rawValue }
 
     func displayName(_ lang: AppLanguage) -> String {
-        return "Ollama"
+        switch self {
+        case .openai: return "OpenAI"
+        case .claude: return "Claude"
+        }
+    }
+
+    var defaultModel: String {
+        switch self {
+        case .openai: return "gpt-4o-mini"
+        case .claude: return "claude-haiku-4-5-20251001"
+        }
+    }
+
+    var defaultEndpoint: String {
+        switch self {
+        case .openai: return "https://api.openai.com/v1/chat/completions"
+        case .claude: return "https://api.anthropic.com/v1/messages"
+        }
+    }
+
+    var models: [LLMModelOption] {
+        switch self {
+        case .openai: return [
+            LLMModelOption(id: "gpt-4o-mini", displayName: "GPT-4o-mini", costEstimate: "~$0.45", isRecommended: true, isMostAccurate: false),
+            LLMModelOption(id: "gpt-4o", displayName: "GPT-4o", costEstimate: "~$12", isRecommended: false, isMostAccurate: true),
+        ]
+        case .claude: return [
+            LLMModelOption(id: "claude-haiku-4-5-20251001", displayName: "Claude Haiku", costEstimate: "~$0.9", isRecommended: true, isMostAccurate: false),
+            LLMModelOption(id: "claude-sonnet-4-5-20250929", displayName: "Claude Sonnet", costEstimate: "~$10–12", isRecommended: false, isMostAccurate: true),
+        ]
+        }
     }
 }
 

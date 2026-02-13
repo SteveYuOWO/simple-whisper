@@ -21,9 +21,9 @@ struct AppConfig: Codable {
 
     // LLM Enhancement
     var enableLLMEnhancement: Bool = false
-    var llmProvider: String = LLMProvider.ollama.rawValue
+    var llmProvider: String = LLMProvider.openai.rawValue
     var llmApiKey: String = ""
-    var llmModel: String = "llama3.2"
+    var llmModel: String = ""
     var llmEndpoint: String = ""
 }
 

@@ -21,17 +21,17 @@ actor WhisperService {
         whisperKit = kit
     }
 
-    func transcribe(audioData: [Float], language: Language) async throws -> String {
+    func transcribe(audioData: [Float], whisperCode: String?) async throws -> String {
         guard let whisperKit else {
             throw WhisperError.modelNotLoaded
         }
 
         var options = DecodingOptions()
         options.task = .transcribe
-        if language == .auto {
-            options.detectLanguage = true
+        if let whisperCode {
+            options.language = whisperCode
         } else {
-            options.language = language.whisperCode
+            options.detectLanguage = true
         }
 
         let results = try await whisperKit.transcribe(audioArray: audioData, decodeOptions: options)

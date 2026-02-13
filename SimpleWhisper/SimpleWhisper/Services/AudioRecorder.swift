@@ -77,6 +77,12 @@ final class AudioRecorder {
         bufferLock.unlock()
 
         let engine = audioEngine
+
+        // Reset the audio unit graph so connections are re-established.
+        // Reusing the engine instance alone is not enough — after a
+        // stop→start cycle the graph can be stale, causing -10877.
+        engine.reset()
+
         let inputNode = engine.inputNode
         let hardwareFormat = inputNode.outputFormat(forBus: 0)
 

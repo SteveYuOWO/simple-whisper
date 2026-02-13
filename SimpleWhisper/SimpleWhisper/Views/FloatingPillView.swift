@@ -96,12 +96,12 @@ struct FloatingPillView: View {
 
     private var processingPill: some View {
         HStack(spacing: 10) {
-            Text(lang.processing)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white.opacity(0.8))
             ProgressView()
                 .controlSize(.small)
                 .tint(.white.opacity(0.6))
+            Text(lang.processing)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.8))
         }
         .pillStyle()
     }
@@ -110,15 +110,12 @@ struct FloatingPillView: View {
 
     private var enhancingPill: some View {
         HStack(spacing: 10) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 13))
-                .foregroundStyle(Color.brand)
-            Text(lang.enhancing)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white.opacity(0.8))
             ProgressView()
                 .controlSize(.small)
                 .tint(.white.opacity(0.6))
+            Text(lang.processing)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.8))
         }
         .pillStyle()
     }
@@ -156,7 +153,6 @@ private struct PillStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .frame(height: 20)
-            .frame(minWidth: 220)
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
             .background(Color(hex: 0x1C1C1E), in: Capsule())

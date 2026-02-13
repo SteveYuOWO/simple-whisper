@@ -58,13 +58,20 @@ final class AppState {
     var enableLLMEnhancement: Bool = false {
         didSet { configManager.update { $0.enableLLMEnhancement = enableLLMEnhancement } }
     }
-    var llmProvider: LLMProvider = .ollama {
-        didSet { configManager.update { $0.llmProvider = llmProvider.rawValue } }
+    var llmProvider: LLMProvider = .openai {
+        didSet {
+            configManager.update { $0.llmProvider = llmProvider.rawValue }
+            // Auto-select default model for the new provider
+            let providerModelIds = llmProvider.models.map(\.id)
+            if !providerModelIds.contains(llmModel) {
+                llmModel = llmProvider.defaultModel
+            }
+        }
     }
     var llmApiKey: String = "" {
         didSet { configManager.update { $0.llmApiKey = llmApiKey } }
     }
-    var llmModel: String = "llama3.2" {
+    var llmModel: String = "" {
         didSet { configManager.update { $0.llmModel = llmModel } }
     }
     var llmEndpoint: String = "" {
@@ -72,18 +79,8 @@ final class AppState {
     }
 
     var isLLMConfigured: Bool {
-        return isOllamaInstalled && !installedOllamaModels.isEmpty
+        return !llmApiKey.isEmpty
     }
-
-    // MARK: - Ollama State
-
-    var isOllamaInstalled: Bool = false
-    var isOllamaRunning: Bool = false
-    var installedOllamaModels: [String] = []
-    var isDownloadingOllamaModel: Bool = false
-    var downloadingOllamaModelName: String?
-    var ollamaModelDownloadProgress: Double = 0
-    var isStartingOllama: Bool = false
 
     // MARK: - Model Download State
 
@@ -154,7 +151,6 @@ final class AppState {
     private let textOutputService = TextOutputService()
     private let llmService = LLMService()
     private let soundService = SoundService.shared
-    let ollamaManager = OllamaManager.shared
 
     // MARK: - Timers
 
@@ -168,7 +164,6 @@ final class AppState {
         loadFromConfig()
         transcriptionHistory = configManager.loadHistory()
         syncLaunchAtLoginState()
-        checkOllamaStatus()
     }
 
     private func loadFromConfig() {
@@ -182,10 +177,11 @@ final class AppState {
         launchAtLogin = cfg.launchAtLogin
         soundFeedback = cfg.soundFeedback
         enableLLMEnhancement = cfg.enableLLMEnhancement
-        llmProvider = LLMProvider(rawValue: cfg.llmProvider) ?? .ollama
+        llmProvider = LLMProvider(rawValue: cfg.llmProvider) ?? .openai
         llmApiKey = cfg.llmApiKey
-        llmModel = cfg.llmModel.isEmpty ? "llama3.2" : cfg.llmModel
         llmEndpoint = cfg.llmEndpoint
+        let provider = llmProvider
+        llmModel = cfg.llmModel.isEmpty ? provider.defaultModel : cfg.llmModel
         updateModelStatus()
     }
 
@@ -301,7 +297,9 @@ final class AppState {
         }
 
         errorDismissTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
-            self?.dismissError()
+            Task { @MainActor [weak self] in
+                self?.dismissError()
+            }
         }
     }
 
@@ -310,7 +308,9 @@ final class AppState {
         successMessage = message
 
         successDismissTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
-            self?.dismissSuccess()
+            Task { @MainActor [weak self] in
+                self?.dismissSuccess()
+            }
         }
     }
 
@@ -392,8 +392,10 @@ final class AppState {
         }
 
         recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            self.recordingDuration += 0.1
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.recordingDuration += 0.1
+            }
         }
     }
 
@@ -425,10 +427,12 @@ final class AppState {
         transcriptionProgress = 0
         progressTimer?.invalidate()
         // Animate progress from 0 to ~0.9 over time, slowing down as it approaches 1
-        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
-            guard let self else { timer.invalidate(); return }
-            let remaining = 0.95 - self.transcriptionProgress
-            self.transcriptionProgress += remaining * 0.08
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let remaining = 0.95 - self.transcriptionProgress
+                self.transcriptionProgress += remaining * 0.08
+            }
         }
     }
 
@@ -455,9 +459,10 @@ final class AppState {
                     try await loadWhisperModel()
                 }
 
+                let langCode = selectedLanguage.whisperCode
                 let text = try await whisperService.transcribe(
                     audioData: samples,
-                    language: selectedLanguage
+                    whisperCode: langCode
                 )
 
                 let elapsed = CFAbsoluteTimeGetCurrent() - startTime
@@ -665,101 +670,6 @@ final class AppState {
         transcribedText = ""
         recordingDuration = 0
         transcriptionProgress = 0
-    }
-
-    // MARK: - Ollama Management
-
-    func checkOllamaStatus() {
-        isOllamaInstalled = ollamaManager.checkOllamaInstalled()
-        Task {
-            await refreshOllamaStatus()
-        }
-    }
-
-    func refreshOllamaStatus() async {
-        let running = await ollamaManager.isOllamaRunning()
-        await MainActor.run {
-            isOllamaRunning = running
-            if running {
-                isOllamaInstalled = true
-            }
-        }
-
-        if running {
-            await refreshInstalledOllamaModels()
-        }
-    }
-
-    func refreshInstalledOllamaModels() async {
-        do {
-            let models = try await ollamaManager.listInstalledModels()
-            await MainActor.run {
-                installedOllamaModels = models
-                // Auto-select first model if none selected
-                if llmProvider == .ollama && llmModel.isEmpty && !models.isEmpty {
-                    llmModel = models[0]
-                }
-            }
-        } catch {
-            print("[AppState] Failed to list Ollama models: \(error)")
-        }
-    }
-
-    func startOllamaService() async {
-        guard isOllamaInstalled else { return }
-
-        await MainActor.run {
-            isStartingOllama = true
-        }
-
-        do {
-            try await ollamaManager.startOllama()
-            await MainActor.run {
-                isOllamaRunning = true
-                isStartingOllama = false
-            }
-            await refreshInstalledOllamaModels()
-        } catch {
-            print("[AppState] Failed to start Ollama: \(error)")
-            await MainActor.run {
-                isStartingOllama = false
-            }
-        }
-    }
-
-    func downloadOllamaModel(_ modelName: String) async {
-        guard isOllamaRunning else {
-            showError(appLanguage.ollamaNotRunning)
-            return
-        }
-
-        isDownloadingOllamaModel = true
-        downloadingOllamaModelName = modelName
-        ollamaModelDownloadProgress = 0
-
-        do {
-            try await ollamaManager.pullModel(name: modelName) { [weak self] progress in
-                self?.ollamaModelDownloadProgress = progress
-            }
-            isDownloadingOllamaModel = false
-            downloadingOllamaModelName = nil
-            ollamaModelDownloadProgress = 1.0
-            await refreshInstalledOllamaModels()
-        } catch {
-            print("[AppState] Failed to download Ollama model: \(error)")
-            isDownloadingOllamaModel = false
-            downloadingOllamaModelName = nil
-            showError(error.localizedDescription)
-        }
-    }
-
-    func deleteOllamaModel(_ modelName: String) async {
-        do {
-            try await ollamaManager.deleteModel(name: modelName)
-            await refreshInstalledOllamaModels()
-        } catch {
-            print("[AppState] Failed to delete Ollama model: \(error)")
-        }
     }
 
 }
