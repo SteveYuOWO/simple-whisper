@@ -59,8 +59,17 @@ enum DS {
     static let popoverCornerRadius: CGFloat = 12
 
     // Settings
-    static let settingsWidth: CGFloat = 660
-    static let settingsSidebarWidth: CGFloat = 180
+    static let settingsSidebarWidth: CGFloat = 200
+    static let settingsMinWidth: CGFloat = 600
+    static let settingsMinHeight: CGFloat = 400
+
+    static var defaultWindowSize: CGSize {
+        guard let screen = NSScreen.main else { return CGSize(width: 900, height: 560) }
+        let frame = screen.visibleFrame
+        let w = round(frame.width * 0.6)
+        let h = round(frame.height * 0.6)
+        return CGSize(width: max(w, settingsMinWidth), height: max(h, settingsMinHeight))
+    }
     static let settingsRowHeight: CGFloat = 44
     static let settingsSectionGap: CGFloat = 20
     static let settingsCardCornerRadius: CGFloat = 10

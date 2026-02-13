@@ -34,6 +34,7 @@ struct SettingsView: View {
                         .padding(.vertical, 8)
                         .padding(.horizontal, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(RoundedRectangle(cornerRadius: 8))
                         .background(
                             selectedTab == tab ? Color.bgTertiary : Color.clear,
                             in: RoundedRectangle(cornerRadius: 8)
@@ -96,7 +97,8 @@ struct SettingsView: View {
             .padding(EdgeInsets(top: 24, leading: 28, bottom: 24, trailing: 28))
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: DS.settingsWidth)
+        .frame(minWidth: DS.settingsMinWidth, minHeight: DS.settingsMinHeight)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.bgPrimary)
     }
 }
