@@ -880,7 +880,7 @@
           "layout": "vertical",
           "gap": 4,
           "padding": [
-            20,
+            48,
             12
           ],
           "children": [
@@ -1053,7 +1053,7 @@
           "layout": "vertical",
           "gap": 20,
           "padding": [
-            24,
+            52,
             28
           ],
           "children": [
@@ -3785,7 +3785,7 @@
           "layout": "vertical",
           "gap": 4,
           "padding": [
-            20,
+            48,
             12
           ],
           "children": [
@@ -3958,7 +3958,7 @@
           "layout": "vertical",
           "gap": 20,
           "padding": [
-            24,
+            52,
             28
           ],
           "children": [
@@ -4155,7 +4155,7 @@
           "layout": "vertical",
           "gap": 4,
           "padding": [
-            20,
+            48,
             12
           ],
           "children": [
@@ -4328,7 +4328,7 @@
           "layout": "vertical",
           "gap": 20,
           "padding": [
-            24,
+            52,
             28
           ],
           "children": [
@@ -4525,7 +4525,7 @@
           "layout": "vertical",
           "gap": 4,
           "padding": [
-            20,
+            48,
             12
           ],
           "children": [
@@ -4698,7 +4698,7 @@
           "layout": "vertical",
           "gap": 20,
           "padding": [
-            24,
+            52,
             28
           ],
           "children": [
@@ -5098,15 +5098,40 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "ellipse",
-                      "id": "AEY3p",
+                      "type": "frame",
+                      "id": "AhD4h",
                       "name": "procSpinner",
                       "width": 16,
                       "height": 16,
-                      "stroke": {
-                        "thickness": 2,
-                        "fill": "#48484A"
-                      }
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "ay1ri",
+                          "x": 0,
+                          "y": 0,
+                          "name": "ringBg",
+                          "width": 16,
+                          "height": 16,
+                          "stroke": {
+                            "thickness": 2,
+                            "fill": "#48484A"
+                          }
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "GgSe1",
+                          "x": 0,
+                          "y": 0,
+                          "name": "ringArc",
+                          "width": 16,
+                          "height": 16,
+                          "stroke": {
+                            "thickness": 2,
+                            "fill": "#FFCA28"
+                          }
+                        }
+                      ]
                     },
                     {
                       "type": "text",
@@ -5266,7 +5291,7 @@
           "layout": "vertical",
           "gap": 4,
           "padding": [
-            20,
+            48,
             12
           ],
           "children": [
@@ -5440,7 +5465,7 @@
           "layout": "vertical",
           "gap": 20,
           "padding": [
-            24,
+            52,
             28
           ],
           "children": [
@@ -5837,7 +5862,7 @@
           "layout": "vertical",
           "gap": 4,
           "padding": [
-            20,
+            48,
             12
           ],
           "children": [
@@ -6011,7 +6036,7 @@
           "layout": "vertical",
           "gap": 20,
           "padding": [
-            24,
+            52,
             28
           ],
           "children": [
@@ -6437,7 +6462,7 @@
           "layout": "vertical",
           "gap": 4,
           "padding": [
-            20,
+            48,
             12
           ],
           "children": [
@@ -6611,7 +6636,7 @@
           "layout": "vertical",
           "gap": 20,
           "padding": [
-            24,
+            52,
             28
           ],
           "children": [
@@ -7038,7 +7063,7 @@
           "layout": "vertical",
           "gap": 4,
           "padding": [
-            20,
+            48,
             12
           ],
           "children": [
@@ -7282,7 +7307,7 @@
           "layout": "vertical",
           "gap": 20,
           "padding": [
-            24,
+            52,
             28
           ],
           "children": [
