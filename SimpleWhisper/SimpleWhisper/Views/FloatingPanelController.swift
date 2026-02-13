@@ -4,9 +4,34 @@ import SwiftUI
 final class FloatingPanelController {
     private var panel: NSPanel?
     private let appState: AppState
+    private var sizeObserver: Any?
 
     init(appState: AppState) {
         self.appState = appState
+    }
+
+    /// Start observing transcription state to auto-show/hide the panel.
+    func startObservingState() {
+        observeTranscriptionState()
+    }
+
+    private func observeTranscriptionState() {
+        withObservationTracking {
+            _ = appState.transcriptionState
+        } onChange: {
+            DispatchQueue.main.async { [weak self] in
+                self?.handleStateChange()
+                self?.observeTranscriptionState()
+            }
+        }
+    }
+
+    private func handleStateChange() {
+        if appState.transcriptionState != .idle {
+            show()
+        } else {
+            dismiss()
+        }
     }
 
     func show() {
@@ -37,9 +62,23 @@ final class FloatingPanelController {
         positionAtBottomCenter(panel)
         panel.orderFrontRegardless()
         self.panel = panel
+
+        // Observe content size changes to auto-resize the panel
+        sizeObserver = NotificationCenter.default.addObserver(
+            forName: NSView.frameDidChangeNotification,
+            object: hostingView,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateSize()
+        }
+        hostingView.postsFrameChangedNotifications = true
     }
 
     func dismiss() {
+        if let sizeObserver {
+            NotificationCenter.default.removeObserver(sizeObserver)
+        }
+        sizeObserver = nil
         panel?.orderOut(nil)
         panel = nil
     }

@@ -50,6 +50,54 @@ extension AppLanguage {
         case .zh: "较小的模型速度更快但准确度较低，较大的模型需要更多内存。"
         }
     }
+    var downloadModel: String {
+        switch self {
+        case .en: "Download"
+        case .zh: "下载"
+        }
+    }
+    var downloading: String {
+        switch self {
+        case .en: "Downloading\u{2026}"
+        case .zh: "下载中\u{2026}"
+        }
+    }
+    var downloaded: String {
+        switch self {
+        case .en: "Downloaded"
+        case .zh: "已下载"
+        }
+    }
+    var deleteModel: String {
+        switch self {
+        case .en: "Delete Model"
+        case .zh: "删除模型"
+        }
+    }
+    var downloadFailed: String {
+        switch self {
+        case .en: "Download Failed"
+        case .zh: "下载失败"
+        }
+    }
+    var retry: String {
+        switch self {
+        case .en: "Retry"
+        case .zh: "重试"
+        }
+    }
+    var cancel: String {
+        switch self {
+        case .en: "Cancel"
+        case .zh: "取消"
+        }
+    }
+    var loadingModel: String {
+        switch self {
+        case .en: "Loading model\u{2026}"
+        case .zh: "加载模型中\u{2026}"
+        }
+    }
 
     // MARK: Settings - Input
 
@@ -69,6 +117,48 @@ extension AppLanguage {
         switch self {
         case .en: "Hold to record"
         case .zh: "按住录音"
+        }
+    }
+    var permissionRequired: String {
+        switch self {
+        case .en: "Accessibility Permission Required"
+        case .zh: "需要辅助功能权限"
+        }
+    }
+    var openSystemSettings: String {
+        switch self {
+        case .en: "Open System Settings"
+        case .zh: "打开系统设置"
+        }
+    }
+    var permissionGranted: String {
+        switch self {
+        case .en: "Permission Granted"
+        case .zh: "已授权"
+        }
+    }
+    var permissionNotGranted: String {
+        switch self {
+        case .en: "Not Granted"
+        case .zh: "未授权"
+        }
+    }
+    var microphonePermission: String {
+        switch self {
+        case .en: "Microphone Permission"
+        case .zh: "麦克风权限"
+        }
+    }
+    var requestPermission: String {
+        switch self {
+        case .en: "Request"
+        case .zh: "申请权限"
+        }
+    }
+    var accessibilityPermission: String {
+        switch self {
+        case .en: "Accessibility"
+        case .zh: "辅助功能"
         }
     }
 
@@ -98,6 +188,12 @@ extension AppLanguage {
         case .zh: "松开停止"
         }
     }
+    var processing: String {
+        switch self {
+        case .en: "Processing\u{2026}"
+        case .zh: "处理中\u{2026}"
+        }
+    }
     var transcribing: String {
         switch self {
         case .en: "Transcribing\u{2026}"
@@ -106,8 +202,14 @@ extension AppLanguage {
     }
     var runningInference: String {
         switch self {
-        case .en: "Running whisper.cpp inference\u{2026}"
-        case .zh: "正在运行 whisper.cpp 推理\u{2026}"
+        case .en: "Running WhisperKit inference\u{2026}"
+        case .zh: "正在运行 WhisperKit 推理\u{2026}"
+        }
+    }
+    var done: String {
+        switch self {
+        case .en: "Done"
+        case .zh: "完成"
         }
     }
     var typedToCursor: String {
@@ -120,12 +222,6 @@ extension AppLanguage {
         switch self {
         case .en: "\(count) words"
         case .zh: "\(count) 个词"
-        }
-    }
-    var testFloatingPanel: String {
-        switch self {
-        case .en: "Test Floating Panel"
-        case .zh: "测试悬浮面板"
         }
     }
 }

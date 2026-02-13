@@ -9,15 +9,43 @@ struct SimpleWhisperApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @State private var appState = AppState()
     @State private var panelController: FloatingPanelController?
+    @State private var selectedTab: SettingsTab = .input
 
     var body: some Scene {
         Window("Settings", id: "settings") {
-            SettingsView()
+            SettingsView(selectedTab: $selectedTab)
                 .environment(appState)
                 .onAppear {
+                    appState.checkModelStatus()
+
                     if panelController == nil {
                         panelController = FloatingPanelController(appState: appState)
                     }
+
+                    // Always start hotkey listening (recording will check model availability)
+                    appState.startHotkeyListening()
+
+                    // Observe state to auto-show/hide pill (hidden by default, shown during recording/processing/done)
+                    panelController?.startObservingState()
+
+                    if appState.needsModelSetup {
+                        // Model not downloaded — navigate to Model tab
+                        selectedTab = .model
+                    } else {
+                        // Model available — pre-load it
+                        Task {
+                            do {
+                                try await appState.loadWhisperModel()
+                            } catch {
+                                print("Failed to load model on startup: \(error)")
+                            }
+                        }
+                    }
+                }
+                // If the user enables Accessibility permission in System Settings while the app is running,
+                // retry starting the event tap when the app becomes active again.
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    appState.startHotkeyListening()
                 }
         }
         .defaultSize(width: DS.defaultWindowSize.width, height: DS.defaultWindowSize.height)

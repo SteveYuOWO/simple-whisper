@@ -18,6 +18,7 @@ struct FloatingPillView: View {
                 donePill
             }
         }
+        .fixedSize()
         .animation(.spring(duration: 0.3), value: appState.transcriptionState)
     }
 
@@ -41,7 +42,7 @@ struct FloatingPillView: View {
     // MARK: - Recording
 
     private var recordingPill: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Circle()
                 .fill(.red)
                 .frame(width: 8, height: 8)
@@ -50,9 +51,6 @@ struct FloatingPillView: View {
                 .foregroundStyle(.white.opacity(0.93))
                 .monospacedDigit()
             WaveformBars()
-            Text(lang.releaseToStop)
-                .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.38))
         }
         .pillStyle()
     }
@@ -64,12 +62,13 @@ struct FloatingPillView: View {
             ProgressView()
                 .controlSize(.small)
                 .tint(.white.opacity(0.6))
-            Text(lang.transcribing)
+            Text(lang.processing)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
             ProgressView(value: appState.transcriptionProgress)
                 .frame(width: 80)
                 .tint(Color.brand)
+                .animation(.linear(duration: 0.3), value: appState.transcriptionProgress)
         }
         .pillStyle()
     }
@@ -81,11 +80,10 @@ struct FloatingPillView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 16))
                 .foregroundStyle(Color.success)
-            Text(lang.typedToCursor)
+            Text(lang.done)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
-            Rectangle()
-                .fill(Color(white: 0.28))
+            Color(white: 0.28)
                 .frame(width: 1, height: 14)
             Text(lang.wordCount(appState.wordCount))
                 .font(.system(size: 12))
@@ -106,10 +104,10 @@ struct FloatingPillView: View {
 private struct PillStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
+            .frame(height: 20)
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
             .background(.black.opacity(0.88), in: Capsule())
-            .shadow(color: .black.opacity(0.25), radius: 30, y: 8)
     }
 }
 

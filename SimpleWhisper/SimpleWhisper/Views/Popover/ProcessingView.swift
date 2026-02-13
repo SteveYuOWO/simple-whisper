@@ -34,7 +34,7 @@ struct ProcessingView: View {
                         RoundedRectangle(cornerRadius: 2)
                             .fill(Color.brand)
                             .frame(width: geo.size.width * min(appState.transcriptionProgress, 1.0))
-                            .animation(.linear(duration: 0.05), value: appState.transcriptionProgress)
+                            .animation(.linear(duration: 0.3), value: appState.transcriptionProgress)
                     }
                 }
                 .frame(height: 4)

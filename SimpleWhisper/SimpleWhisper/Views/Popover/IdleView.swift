@@ -58,18 +58,6 @@ struct IdleView: View {
             // Footer
             PopoverFooterView(leftText: "\(appState.selectedModel.rawValue) Model") {
                 HStack(spacing: 12) {
-                    #if DEBUG
-                    Button {
-                        appState.simulateFullCycle()
-                    } label: {
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 11))
-                            .foregroundStyle(Color.textTertiary)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Simulate full cycle")
-                    #endif
-
                     Button {
                         NSApp.activate()
                         openWindow(id: "settings")

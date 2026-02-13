@@ -7,7 +7,7 @@ enum TranscriptionState: Equatable {
     case done
 }
 
-enum WhisperModel: String, CaseIterable, Identifiable {
+enum WhisperModel: String, CaseIterable, Identifiable, Codable {
     case tiny = "Tiny"
     case base = "Base"
     case small = "Small"
@@ -16,13 +16,36 @@ enum WhisperModel: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    var modelName: String {
+        switch self {
+        case .tiny:   return "openai_whisper-tiny"
+        case .base:   return "openai_whisper-base"
+        case .small:  return "openai_whisper-small"
+        case .medium: return "openai_whisper-medium"
+        case .large:  return "openai_whisper-large-v3"
+        }
+    }
+
+    static let modelRepo = "argmaxinc/whisperkit-coreml"
+
     var sizeDescription: String {
         switch self {
-        case .tiny:   return "75 MB"
-        case .base:   return "141 MB"
-        case .small:  return "461 MB"
-        case .medium: return "1.4 GB"
-        case .large:  return "2.9 GB"
+        case .tiny:   return "~40 MB"
+        case .base:   return "~80 MB"
+        case .small:  return "~250 MB"
+        case .medium: return "~750 MB"
+        case .large:  return "~1.5 GB"
+        }
+    }
+
+    func pickerLabel(_ lang: AppLanguage) -> String {
+        let base = "\(rawValue) (\(sizeDescription))"
+        switch (self, lang) {
+        case (.base, .en):  return base + " (Recommended)"
+        case (.base, .zh):  return base + "（推荐）"
+        case (.large, .en): return base + " (Most Accurate)"
+        case (.large, .zh): return base + "（最精准）"
+        default:            return base
         }
     }
 }
@@ -35,7 +58,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 }
 
 enum SettingsTab: CaseIterable, Identifiable {
-    case general, model, input
+    case input, general, model
 
     var id: Self { self }
 
@@ -59,7 +82,7 @@ enum SettingsTab: CaseIterable, Identifiable {
     }
 }
 
-enum Language: String, CaseIterable, Identifiable {
+enum Language: String, CaseIterable, Identifiable, Codable {
     case auto = "Auto-detect"
     case en = "English"
     case zh = "Chinese"
@@ -70,6 +93,19 @@ enum Language: String, CaseIterable, Identifiable {
     case de = "German"
 
     var id: String { rawValue }
+
+    var whisperCode: String? {
+        switch self {
+        case .auto: return nil
+        case .en: return "en"
+        case .zh: return "zh"
+        case .ja: return "ja"
+        case .ko: return "ko"
+        case .es: return "es"
+        case .fr: return "fr"
+        case .de: return "de"
+        }
+    }
 
     func displayName(_ appLang: AppLanguage) -> String {
         switch self {

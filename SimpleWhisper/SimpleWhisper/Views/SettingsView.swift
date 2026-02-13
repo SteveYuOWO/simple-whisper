@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
-    @State private var selectedTab: SettingsTab = .general
+    @Binding var selectedTab: SettingsTab
 
     var body: some View {
         let lang = appState.appLanguage
@@ -72,29 +72,7 @@ struct SettingsView: View {
                     SettingsInputSection()
                 }
 
-                #if DEBUG
                 Spacer()
-                Button {
-                    let controller = FloatingPanelController(appState: appState)
-                    controller.show()
-                    appState.debugPanelController = controller
-                    appState.simulateFullCycle()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 11))
-                        Text(lang.testFloatingPanel)
-                            .font(.system(size: 12))
-                    }
-                    .foregroundStyle(Color.textSecondary)
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 12)
-                    .background(Color.bgSecondary, in: Capsule())
-                }
-                .buttonStyle(.plain)
-                #else
-                Spacer()
-                #endif
             }
             .padding(EdgeInsets(top: 24, leading: 28, bottom: 24, trailing: 28))
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
