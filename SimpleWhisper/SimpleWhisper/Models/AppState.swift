@@ -425,17 +425,25 @@ final class AppState {
 
     private var progressTimer: Timer?
 
-    private func startProgressAnimation() {
-        transcriptionProgress = 0
+    private var progressCeiling: Double = 0.95
+
+    private func startProgressAnimation(from startValue: Double = 0, ceiling: Double = 0.95) {
+        transcriptionProgress = startValue
+        progressCeiling = ceiling
         progressTimer?.invalidate()
-        // Animate progress from 0 to ~0.9 over time, slowing down as it approaches 1
+        // Animate progress asymptotically toward the ceiling
         progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                let remaining = 0.95 - self.transcriptionProgress
+                let remaining = self.progressCeiling - self.transcriptionProgress
                 self.transcriptionProgress += remaining * 0.08
             }
         }
+    }
+
+    /// Continue progress animation from current value toward a new ceiling
+    private func continueProgressAnimation(ceiling: Double) {
+        progressCeiling = ceiling
     }
 
     private func finishProgressAnimation() {
@@ -450,7 +458,9 @@ final class AppState {
     private func processAudio(_ samples: [Float]) {
         transcriptionState = .processing
         processingPhase = .transcribing
-        startProgressAnimation()
+        let willEnhance = enableLLMEnhancement && isLLMConfigured
+        // If LLM enhancement is enabled, whisper fills progress to ~50%, LLM fills the rest
+        startProgressAnimation(ceiling: willEnhance ? 0.50 : 0.95)
 
         Task {
             let processingStart = ContinuousClock.now
@@ -482,18 +492,18 @@ final class AppState {
                 }
 
                 await MainActor.run {
-                    self.finishProgressAnimation()
                     self.transcribedText = text
                     self.processingTime = elapsed
                     self.wordCount = text.split(separator: " ").count
                 }
 
-                // LLM Enhancement step
+                // LLM Enhancement step — continues seamlessly from whisper
                 var finalText = text
-                if await MainActor.run(body: { self.enableLLMEnhancement && self.isLLMConfigured }) {
+                if willEnhance {
                     await MainActor.run {
                         self.processingPhase = .enhancing
-                        self.startProgressAnimation()
+                        // Continue progress from current value toward 0.95
+                        self.continueProgressAnimation(ceiling: 0.95)
                     }
 
                     let provider = await MainActor.run { self.llmProvider }
@@ -517,10 +527,10 @@ final class AppState {
                     } catch {
                         print("[AppState] LLM enhancement failed: \(error). Using original text.")
                     }
+                }
 
-                    await MainActor.run {
-                        self.finishProgressAnimation()
-                    }
+                await MainActor.run {
+                    self.finishProgressAnimation()
                 }
 
                 await MainActor.run {

@@ -22,7 +22,7 @@ struct ProcessingView: View {
                             .animation(.linear(duration: 0.3), value: appState.transcriptionProgress)
                     }
 
-                Text(isEnhancing ? lang.enhancing : lang.transcribing)
+                Text(lang.processing)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Color.textPrimary)
 

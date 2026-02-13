@@ -31,6 +31,8 @@ final class HotkeyManager {
     // In practice, Bool assignment on Apple platforms is safe for this flag pattern.
     fileprivate var isMonitoring = false
     private var monitorCurrentKey: Int64 = -1
+    private var lastMonitorModifiers: [String] = []
+    private var lastMonitorKey: Int64 = -2
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -41,6 +43,13 @@ final class HotkeyManager {
     private var tapThread: Thread?
     private var tapRunLoop: CFRunLoop?
     private let tapThreadReady = DispatchSemaphore(value: 0)
+    private let tapThreadStopped = DispatchSemaphore(value: 0)
+
+    // tapDisabledByTimeout can fire repeatedly while the system is under load.
+    // Keep re-enabling fast, but throttle state reconciliation/logging to avoid
+    // flooding queues and causing multi-second stalls.
+    private var lastTapReconcileAt: CFAbsoluteTime = 0
+    private var lastTapReconcileLogAt: CFAbsoluteTime = 0
 
     static func isAccessibilityGranted() -> Bool {
         AXIsProcessTrusted()
@@ -65,17 +74,14 @@ final class HotkeyManager {
             (1 << CGEventType.keyDown.rawValue) |
             (1 << CGEventType.keyUp.rawValue)
 
-        let observer = Unmanaged.passRetained(self).toOpaque()
-
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: mask,
             callback: hotkeyCallback,
-            userInfo: observer
+            userInfo: Unmanaged.passUnretained(self).toOpaque()
         ) else {
-            Unmanaged<HotkeyManager>.fromOpaque(observer).release()
             print("[HotkeyManager] Failed to create event tap. Accessibility permission not granted.")
             return
         }
@@ -98,6 +104,7 @@ final class HotkeyManager {
             CFRunLoopAddSource(rl, dummy, .commonModes)
             self?.tapThreadReady.signal()
             CFRunLoopRun()
+            self?.tapThreadStopped.signal()
         }
         thread.name = "com.simplewhisper.EventTap"
         thread.qualityOfService = .userInteractive
@@ -109,13 +116,24 @@ final class HotkeyManager {
 
     func stop() {
         guard let tap = eventTap else { return }
-        CGEvent.tapEnable(tap: tap, enable: false)
         if let rl = tapRunLoop {
-            if let source = runLoopSource {
-                CFRunLoopRemoveSource(rl, source, .commonModes)
+            // Stop the runloop on its own thread to avoid cross-thread CFRunLoop calls.
+            CFRunLoopPerformBlock(rl, CFRunLoopMode.commonModes!.rawValue) { [weak self] in
+                guard let self else { return }
+                CGEvent.tapEnable(tap: tap, enable: false)
+                if let source = self.runLoopSource {
+                    CFRunLoopRemoveSource(rl, source, .commonModes)
+                }
+                CFRunLoopStop(rl)
             }
-            CFRunLoopStop(rl)
+            CFRunLoopWakeUp(rl)
+
+            // Avoid waiting forever if something is wrong; best-effort stop.
+            _ = tapThreadStopped.wait(timeout: .now() + .seconds(1))
+        } else {
+            CGEvent.tapEnable(tap: tap, enable: false)
         }
+
         tapThread?.cancel()
         tapThread = nil
         tapRunLoop = nil
@@ -126,11 +144,15 @@ final class HotkeyManager {
         fnDown = false
         fnFlagReliable = false
         monitorCurrentKey = -1
+        lastMonitorModifiers = []
+        lastMonitorKey = -2
     }
 
     func startMonitor(callback: @escaping ([String], Int64) -> Void) {
         isMonitoring = true
         monitorCurrentKey = -1
+        lastMonitorModifiers = []
+        lastMonitorKey = -2
         modifierMonitorCallback = callback
         start()
     }
@@ -139,10 +161,26 @@ final class HotkeyManager {
         isMonitoring = false
         modifierMonitorCallback = nil
         monitorCurrentKey = -1
+        lastMonitorModifiers = []
+        lastMonitorKey = -2
         stop()
     }
 
     func updateHotkey(modifiers: [String], keyCode: Int) {
+        // Hotkey config changes come from the main actor, while event processing
+        // happens on the tap thread. Apply changes on the tap runloop when running
+        // to avoid races in hotkey state evaluation.
+        if let rl = tapRunLoop {
+            CFRunLoopPerformBlock(rl, CFRunLoopMode.commonModes!.rawValue) { [weak self] in
+                self?._updateHotkeyLocked(modifiers: modifiers, keyCode: keyCode)
+            }
+            CFRunLoopWakeUp(rl)
+            return
+        }
+        _updateHotkeyLocked(modifiers: modifiers, keyCode: keyCode)
+    }
+
+    private func _updateHotkeyLocked(modifiers: [String], keyCode: Int) {
         var reqFn = false
         var reqControl = false
         var reqOption = false
@@ -276,7 +314,17 @@ final class HotkeyManager {
         if flags.contains(.maskAlternate) { currentModifiers.append("option") }
         if flags.contains(.maskCommand) { currentModifiers.append("command") }
         if flags.contains(.maskShift) { currentModifiers.append("shift") }
-        modifierMonitorCallback?(currentModifiers, monitorCurrentKey)
+
+        let key = monitorCurrentKey
+        if currentModifiers == lastMonitorModifiers && key == lastMonitorKey {
+            return
+        }
+        lastMonitorModifiers = currentModifiers
+        lastMonitorKey = key
+
+        DispatchQueue.main.async { [weak self] in
+            self?.modifierMonitorCallback?(currentModifiers, key)
+        }
     }
 
     private func checkHotkeyState(
@@ -303,50 +351,64 @@ final class HotkeyManager {
         if matched && hasRequirement && !isHotkeyPressed {
             isHotkeyPressed = true
             print("[HotkeyManager] Hotkey DOWN detected")
-            onKeyDown?()
+            DispatchQueue.main.async { [weak self] in
+                self?.onKeyDown?()
+            }
         } else if !matched && isHotkeyPressed {
             isHotkeyPressed = false
             print("[HotkeyManager] Hotkey UP detected")
-            onKeyUp?()
+            DispatchQueue.main.async { [weak self] in
+                self?.onKeyUp?()
+            }
         }
     }
 
     /// Called directly on the tap thread (not main) to re-enable a timed-out tap
-    /// as fast as possible. State reconciliation is dispatched to main for thread safety.
+    /// as fast as possible. State reconciliation is performed on the tap thread,
+    /// and only the user callbacks are dispatched to main.
     fileprivate func reEnableTapIfNeeded() {
         guard let tap = eventTap else { return }
         // CGEvent.tapEnable is thread-safe — call it immediately on the tap
         // thread so re-enabling is never blocked by a busy main thread.
         CGEvent.tapEnable(tap: tap, enable: true)
 
-        DispatchQueue.main.async { [self] in
-            // Query the real keyboard state instead of blindly resetting.
-            // This avoids falsely firing onKeyUp when the user is still
-            // holding the hotkey (e.g. during heavy audio engine work).
-            let currentFlags = CGEventSource.flagsState(.combinedSessionState)
+        // Throttle reconciliation; repeated timeout notifications can happen
+        // under extreme load and would otherwise cause long stalls.
+        let now = CFAbsoluteTimeGetCurrent()
+        if now - lastTapReconcileAt < 0.25 {
+            return
+        }
+        lastTapReconcileAt = now
 
-            let fnFlag = currentFlags.contains(.maskSecondaryFn)
-            if fnFlag { self.fnFlagReliable = true }
-            if self.fnFlagReliable {
-                self.fnDown = fnFlag
-            }
+        // Query the real keyboard state instead of blindly resetting.
+        // This avoids falsely firing onKeyUp when the user is still holding
+        // the hotkey (e.g. during heavy audio engine work).
+        let currentFlags = CGEventSource.flagsState(.combinedSessionState)
 
-            if self.requiredKeyCode >= 0 {
-                self.isRequiredKeyHeld = CGEventSource.keyState(
-                    .combinedSessionState,
-                    key: CGKeyCode(self.requiredKeyCode)
-                )
-            }
+        let fnFlag = currentFlags.contains(.maskSecondaryFn)
+        if fnFlag { fnFlagReliable = true }
+        if fnFlagReliable {
+            fnDown = fnFlag
+        }
 
-            // Re-evaluate with actual state — fires onKeyDown/onKeyUp only
-            // if the real state differs from what we previously recorded.
-            self.checkHotkeyState(
-                controlDown: currentFlags.contains(.maskControl),
-                optionDown: currentFlags.contains(.maskAlternate),
-                commandDown: currentFlags.contains(.maskCommand),
-                shiftDown: currentFlags.contains(.maskShift)
+        if requiredKeyCode >= 0 {
+            isRequiredKeyHeld = CGEventSource.keyState(
+                .combinedSessionState,
+                key: CGKeyCode(requiredKeyCode)
             )
+        }
 
+        // Re-evaluate with actual state — fires onKeyDown/onKeyUp only
+        // if the real state differs from what we previously recorded.
+        checkHotkeyState(
+            controlDown: currentFlags.contains(.maskControl),
+            optionDown: currentFlags.contains(.maskAlternate),
+            commandDown: currentFlags.contains(.maskCommand),
+            shiftDown: currentFlags.contains(.maskShift)
+        )
+
+        if now - lastTapReconcileLogAt > 1.0 {
+            lastTapReconcileLogAt = now
             print("[HotkeyManager] Re-enabled event tap (reconciled with live keyboard state)")
         }
     }
@@ -488,9 +550,9 @@ private func hotkeyCallback(
         return Unmanaged.passUnretained(event)
     }
 
-    DispatchQueue.main.async {
-        manager.handleEvent(event, type: type)
-    }
+    // Handle on the tap thread to avoid flooding the main queue with every
+    // key event. User callbacks are dispatched back to main as needed.
+    manager.handleEvent(event, type: type)
 
     // In monitor (hotkey recording) mode, consume all key events so macOS
     // doesn't play the system alert sound for "unhandled" key presses.
