@@ -3,6 +3,8 @@ import SwiftUI
 struct FloatingPillView: View {
     @Environment(AppState.self) private var appState
 
+    private var lang: AppLanguage { appState.appLanguage }
+
     var body: some View {
         Group {
             switch appState.transcriptionState {
@@ -29,7 +31,7 @@ struct FloatingPillView: View {
             Circle()
                 .fill(Color(white: 0.28))
                 .frame(width: 6, height: 6)
-            Text("Ready")
+            Text(lang.ready)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.5))
         }
@@ -48,7 +50,7 @@ struct FloatingPillView: View {
                 .foregroundStyle(.white.opacity(0.93))
                 .monospacedDigit()
             WaveformBars()
-            Text("Release to stop")
+            Text(lang.releaseToStop)
                 .font(.system(size: 12))
                 .foregroundStyle(.white.opacity(0.38))
         }
@@ -62,7 +64,7 @@ struct FloatingPillView: View {
             ProgressView()
                 .controlSize(.small)
                 .tint(.white.opacity(0.6))
-            Text("Transcribing\u{2026}")
+            Text(lang.transcribing)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
             ProgressView(value: appState.transcriptionProgress)
@@ -79,13 +81,13 @@ struct FloatingPillView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 16))
                 .foregroundStyle(Color.success)
-            Text("Typed to cursor")
+            Text(lang.typedToCursor)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
             Rectangle()
                 .fill(Color(white: 0.28))
                 .frame(width: 1, height: 14)
-            Text("\(appState.wordCount) words")
+            Text(lang.wordCount(appState.wordCount))
                 .font(.system(size: 12))
                 .foregroundStyle(.white.opacity(0.38))
         }

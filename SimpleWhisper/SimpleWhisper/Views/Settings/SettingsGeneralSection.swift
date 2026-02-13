@@ -5,15 +5,33 @@ struct SettingsGeneralSection: View {
 
     var body: some View {
         @Bindable var appState = appState
+        let lang = appState.appLanguage
 
         SettingsGroupCard {
-                SettingsToggleRow(label: "Launch at Login", isOn: $appState.launchAtLogin)
+                HStack {
+                    Text(lang.language)
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.textPrimary)
+                    Spacer()
+                    Picker("", selection: $appState.appLanguage) {
+                        ForEach(AppLanguage.allCases) { language in
+                            Text(language.rawValue).tag(language)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .fixedSize()
+                }
+                .frame(height: DS.settingsRowHeight)
+                .padding(.horizontal, DS.settingsHPadding)
                 SettingsSeparator()
-                SettingsToggleRow(label: "Sound Feedback", isOn: $appState.soundFeedback)
+                SettingsToggleRow(label: lang.launchAtLogin, isOn: $appState.launchAtLogin)
                 SettingsSeparator()
-                SettingsToggleRow(label: "Auto Punctuation", isOn: $appState.autoPunctuation)
+                SettingsToggleRow(label: lang.soundFeedback, isOn: $appState.soundFeedback)
                 SettingsSeparator()
-                SettingsToggleRow(label: "Show in Dock", isOn: $appState.showInDock)
+                SettingsToggleRow(label: lang.autoPunctuation, isOn: $appState.autoPunctuation)
+                SettingsSeparator()
+                SettingsToggleRow(label: lang.showInDock, isOn: $appState.showInDock)
         }
     }
 }

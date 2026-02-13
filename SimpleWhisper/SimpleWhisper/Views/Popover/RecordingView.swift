@@ -5,6 +5,8 @@ struct RecordingView: View {
     @State private var animateWaveform = false
 
     var body: some View {
+        let lang = appState.appLanguage
+
         VStack(spacing: 0) {
             VStack(spacing: 14) {
                 // Pulsing mic circle
@@ -17,7 +19,7 @@ struct RecordingView: View {
                             .foregroundStyle(.white)
                     }
 
-                Text("Listening\u{2026}")
+                Text(lang.listening)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Color.textPrimary)
 
@@ -49,7 +51,7 @@ struct RecordingView: View {
                     .foregroundStyle(Color.brand)
                     .monospacedDigit()
                 Spacer()
-                Text("Release to stop")
+                Text(lang.releaseToStop)
                     .font(.system(size: 12))
                     .foregroundStyle(Color.textTertiary)
             }

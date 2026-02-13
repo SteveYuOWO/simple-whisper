@@ -5,6 +5,8 @@ struct IdleView: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
+        let lang = appState.appLanguage
+
         VStack(spacing: 0) {
             // Top content
             VStack(spacing: 16) {
@@ -27,7 +29,7 @@ struct IdleView: View {
                     Circle()
                         .fill(Color.textTertiary)
                         .frame(width: 7, height: 7)
-                    Text("Ready")
+                    Text(lang.ready)
                         .font(.system(size: 13))
                         .foregroundStyle(Color.textSecondary)
                 }
@@ -45,7 +47,7 @@ struct IdleView: View {
                     .padding(.vertical, 2)
                     .background(Color.bgTertiary, in: RoundedRectangle(cornerRadius: 4))
 
-                Text("Hold to start recording")
+                Text(lang.holdToStartRecording)
                     .font(.system(size: 12))
                     .foregroundStyle(Color.textTertiary)
             }

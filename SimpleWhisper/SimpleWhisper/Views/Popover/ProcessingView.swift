@@ -5,6 +5,8 @@ struct ProcessingView: View {
     @State private var isSpinning = false
 
     var body: some View {
+        let lang = appState.appLanguage
+
         VStack(spacing: 0) {
             VStack(spacing: 14) {
                 // Spinner
@@ -20,7 +22,7 @@ struct ProcessingView: View {
                     }
                     .onAppear { isSpinning = true }
 
-                Text("Transcribing\u{2026}")
+                Text(lang.transcribing)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Color.textPrimary)
 
@@ -37,7 +39,7 @@ struct ProcessingView: View {
                 }
                 .frame(height: 4)
 
-                Text("Running whisper.cpp inference\u{2026}")
+                Text(lang.runningInference)
                     .font(.system(size: 12))
                     .foregroundStyle(Color.textTertiary)
             }

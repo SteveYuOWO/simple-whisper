@@ -5,6 +5,8 @@ struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
 
     var body: some View {
+        let lang = appState.appLanguage
+
         HStack(spacing: 0) {
             // MARK: - Sidebar
             VStack(alignment: .leading, spacing: 4) {
@@ -27,7 +29,7 @@ struct SettingsView: View {
                             Image(systemName: tab.icon)
                                 .font(.system(size: 13))
                                 .frame(width: 16)
-                            Text(tab.rawValue)
+                            Text(tab.title(lang))
                                 .font(.system(size: 13, weight: selectedTab == tab ? .medium : .regular))
                         }
                         .foregroundStyle(selectedTab == tab ? Color.textPrimary : Color.textSecondary)
@@ -57,7 +59,7 @@ struct SettingsView: View {
 
             // MARK: - Content
             VStack(alignment: .leading, spacing: 20) {
-                Text(selectedTab.rawValue)
+                Text(selectedTab.title(lang))
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(Color.textPrimary)
 
@@ -81,7 +83,7 @@ struct SettingsView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "play.fill")
                             .font(.system(size: 11))
-                        Text("Test Floating Panel")
+                        Text(lang.testFloatingPanel)
                             .font(.system(size: 12))
                     }
                     .foregroundStyle(Color.textSecondary)

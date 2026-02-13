@@ -4,20 +4,22 @@ struct SettingsModelSection: View {
     @Environment(AppState.self) private var appState
 
     var body: some View {
+        let lang = appState.appLanguage
+
         VStack(spacing: 6) {
             SettingsGroupCard {
                 SettingsRowView(
-                    label: "Whisper Model",
+                    label: lang.whisperModel,
                     value: "\(appState.selectedModel.rawValue) (\(appState.selectedModel.sizeDescription))"
                 )
                 SettingsSeparator()
                 SettingsRowView(
-                    label: "Language",
-                    value: appState.selectedLanguage.rawValue
+                    label: lang.language,
+                    value: appState.selectedLanguage.displayName(lang)
                 )
             }
 
-            Text("Smaller models are faster but less accurate. Larger models require more memory.")
+            Text(lang.modelHint)
                 .font(.system(size: 12))
                 .foregroundStyle(Color.textSecondary)
                 .lineSpacing(3)

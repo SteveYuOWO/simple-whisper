@@ -27,18 +27,34 @@ enum WhisperModel: String, CaseIterable, Identifiable {
     }
 }
 
-enum SettingsTab: String, CaseIterable, Identifiable {
-    case general = "General"
-    case model = "Model"
-    case input = "Input"
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case en = "English"
+    case zh = "中文"
 
     var id: String { rawValue }
+}
+
+enum SettingsTab: CaseIterable, Identifiable {
+    case general, model, input
+
+    var id: Self { self }
 
     var icon: String {
         switch self {
         case .general: return "gearshape"
         case .model:   return "cpu"
         case .input:   return "mic"
+        }
+    }
+
+    func title(_ lang: AppLanguage) -> String {
+        switch (self, lang) {
+        case (.general, .en): return "General"
+        case (.general, .zh): return "通用"
+        case (.model, .en):   return "Model"
+        case (.model, .zh):   return "模型"
+        case (.input, .en):   return "Input"
+        case (.input, .zh):   return "输入"
         }
     }
 }
@@ -54,4 +70,21 @@ enum Language: String, CaseIterable, Identifiable {
     case de = "German"
 
     var id: String { rawValue }
+
+    func displayName(_ appLang: AppLanguage) -> String {
+        switch self {
+        case .auto:
+            switch appLang {
+            case .en: return "Auto-detect"
+            case .zh: return "自动检测"
+            }
+        case .en: return "English"
+        case .zh: return "中文"
+        case .ja: return "日本語"
+        case .ko: return "한국어"
+        case .es: return "Español"
+        case .fr: return "Français"
+        case .de: return "Deutsch"
+        }
+    }
 }

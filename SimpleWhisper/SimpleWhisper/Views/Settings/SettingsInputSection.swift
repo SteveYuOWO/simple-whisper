@@ -4,14 +4,16 @@ struct SettingsInputSection: View {
     @Environment(AppState.self) private var appState
 
     var body: some View {
+        let lang = appState.appLanguage
+
         SettingsGroupCard {
             SettingsRowView(
-                label: "Microphone",
+                label: lang.microphone,
                 value: appState.selectedMicrophone
             )
             SettingsSeparator()
             HStack {
-                Text("Hotkey")
+                Text(lang.hotkey)
                     .font(.system(size: 14))
                     .foregroundStyle(Color.textPrimary)
                 Spacer()
@@ -22,7 +24,7 @@ struct SettingsInputSection: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
                         .background(Color.bgSecondary, in: RoundedRectangle(cornerRadius: 6))
-                    Text("Hold to record")
+                    Text(lang.holdToRecord)
                         .font(.system(size: 13))
                         .foregroundStyle(Color.textSecondary)
                 }

@@ -14,6 +14,7 @@ final class AppState {
 
     // MARK: - Settings
 
+    var appLanguage: AppLanguage = .en
     var selectedModel: WhisperModel = .base
     var selectedLanguage: Language = .auto
     var selectedMicrophone: String = "Default"

@@ -4,6 +4,8 @@ struct DoneView: View {
     @Environment(AppState.self) private var appState
 
     var body: some View {
+        let lang = appState.appLanguage
+
         VStack(spacing: 0) {
             VStack(spacing: 12) {
                 // Success checkmark
@@ -16,7 +18,7 @@ struct DoneView: View {
                             .foregroundStyle(Color.success)
                     }
 
-                Text("Typed to cursor")
+                Text(lang.typedToCursor)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Color.textPrimary)
 
@@ -38,7 +40,7 @@ struct DoneView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(Color.textTertiary)
                 Spacer()
-                Text("\(appState.wordCount) words")
+                Text(lang.wordCount(appState.wordCount))
                     .font(.system(size: 11))
                     .foregroundStyle(Color.textTertiary)
             }
