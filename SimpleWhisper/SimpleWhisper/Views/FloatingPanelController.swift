@@ -72,6 +72,7 @@ final class FloatingPanelController {
         )
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = .clear
+        hostingView.layer?.isOpaque = false
         hostingView.setFrameSize(hostingView.fittingSize)
 
         let panel = NSPanel(
