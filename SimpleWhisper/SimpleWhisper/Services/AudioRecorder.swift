@@ -12,10 +12,42 @@ final class AudioRecorder {
 
     var isRecording: Bool = false
 
+    enum MicrophonePermissionStatus: String {
+        case undetermined
+        case denied
+        case granted
+    }
+
+    static func microphonePermissionStatus() -> MicrophonePermissionStatus {
+        if #available(macOS 14.0, *) {
+            switch AVAudioApplication.shared.recordPermission {
+            case .granted: return .granted
+            case .denied: return .denied
+            case .undetermined: return .undetermined
+            @unknown default: return .undetermined
+            }
+        } else {
+            switch AVCaptureDevice.authorizationStatus(for: .audio) {
+            case .authorized: return .granted
+            case .denied, .restricted: return .denied
+            case .notDetermined: return .undetermined
+            @unknown default: return .undetermined
+            }
+        }
+    }
+
     static func requestMicrophonePermission() async -> Bool {
-        await withCheckedContinuation { continuation in
-            AVCaptureDevice.requestAccess(for: .audio) { granted in
-                continuation.resume(returning: granted)
+        if #available(macOS 14.0, *) {
+            return await withCheckedContinuation { continuation in
+                AVAudioApplication.requestRecordPermission { granted in
+                    continuation.resume(returning: granted)
+                }
+            }
+        } else {
+            return await withCheckedContinuation { continuation in
+                AVCaptureDevice.requestAccess(for: .audio) { granted in
+                    continuation.resume(returning: granted)
+                }
             }
         }
     }
@@ -32,6 +64,12 @@ final class AudioRecorder {
         // If a previous recording is still active, stop it first.
         if isRecording {
             _ = stopRecording()
+        }
+
+        // Preflight permission to avoid AVAudioEngine triggering a permission prompt
+        // at unexpected times (e.g. when started from a global hotkey).
+        guard Self.microphonePermissionStatus() == .granted else {
+            throw RecordingError.noMicrophonePermission
         }
 
         bufferLock.lock()
@@ -122,11 +160,13 @@ final class AudioRecorder {
     }
 
     enum RecordingError: LocalizedError {
+        case noMicrophonePermission
         case noMicrophone
         case formatError
 
         var errorDescription: String? {
             switch self {
+            case .noMicrophonePermission: return "Microphone permission required"
             case .noMicrophone: return "No microphone available"
             case .formatError: return "Audio format error"
             }

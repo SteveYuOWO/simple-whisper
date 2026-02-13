@@ -4,6 +4,7 @@ struct FloatingPillView: View {
     @Environment(AppState.self) private var appState
 
     private var lang: AppLanguage { appState.appLanguage }
+    private let maxMessageTextWidth: CGFloat = 360
 
     var body: some View {
         VStack(spacing: 8) {
@@ -51,6 +52,9 @@ struct FloatingPillView: View {
             Text(message)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.9))
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: maxMessageTextWidth, alignment: .leading)
         }
         .pillStyle()
     }
@@ -65,6 +69,9 @@ struct FloatingPillView: View {
             Text(message)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.9))
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: maxMessageTextWidth, alignment: .leading)
         }
         .pillStyle()
     }
@@ -138,7 +145,8 @@ struct FloatingPillView: View {
     private func formatDuration(_ seconds: TimeInterval) -> String {
         let mins = Int(seconds) / 60
         let secs = Int(seconds) % 60
-        return String(format: "%d:%02d", mins, secs)
+        // Keep a stable width so the floating panel doesn't resize every minute boundary.
+        return String(format: "%02d:%02d", mins, secs)
     }
 }
 
@@ -148,6 +156,7 @@ private struct PillStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .frame(height: 20)
+            .frame(minWidth: 220)
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
             .background(Color(hex: 0x1C1C1E), in: Capsule())

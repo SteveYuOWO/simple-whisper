@@ -243,7 +243,7 @@ struct SettingsInputSection: View {
         }
         .onAppear {
             microphones = AudioRecorder.availableMicrophones()
-            isMicrophoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
+            isMicrophoneGranted = AudioRecorder.microphonePermissionStatus() == .granted
             isAccessibilityGranted = HotkeyManager.isAccessibilityGranted()
         }
         .onDisappear {
@@ -252,7 +252,7 @@ struct SettingsInputSection: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            isMicrophoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
+            isMicrophoneGranted = AudioRecorder.microphonePermissionStatus() == .granted
             isAccessibilityGranted = HotkeyManager.isAccessibilityGranted()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in

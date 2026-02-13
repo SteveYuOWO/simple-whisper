@@ -4,7 +4,10 @@ import SwiftUI
 final class FloatingPanelController {
     private var panel: NSPanel?
     private let appState: AppState
-    private var sizeObserver: Any?
+    // Avoid observing frame changes on the hosting view:
+    // resizing the panel triggers frame changes which can cause a feedback loop
+    // and make the UI feel "stuck" (looks like an invisible mask eating input).
+    private var scheduledSizeUpdate: DispatchWorkItem?
 
     init(appState: AppState) {
         self.appState = appState
@@ -54,6 +57,7 @@ final class FloatingPanelController {
         let hasContent = appState.transcriptionState != .idle || appState.errorMessage != nil || appState.successMessage != nil
         if hasContent {
             show()
+            scheduleUpdateSize()
         } else {
             dismiss()
         }
@@ -88,30 +92,38 @@ final class FloatingPanelController {
         positionAtBottomCenter(panel)
         panel.orderFrontRegardless()
         self.panel = panel
-
-        // Observe content size changes to auto-resize the panel
-        sizeObserver = NotificationCenter.default.addObserver(
-            forName: NSView.frameDidChangeNotification,
-            object: hostingView,
-            queue: .main
-        ) { [weak self] _ in
-            self?.updateSize()
-        }
-        hostingView.postsFrameChangedNotifications = true
+        // Coalesce size updates: SwiftUI layout may settle a tick after the panel is ordered front.
+        scheduleUpdateSize()
     }
 
     func dismiss() {
-        if let sizeObserver {
-            NotificationCenter.default.removeObserver(sizeObserver)
-        }
-        sizeObserver = nil
+        scheduledSizeUpdate?.cancel()
+        scheduledSizeUpdate = nil
         panel?.orderOut(nil)
         panel = nil
     }
 
-    func updateSize() {
+    private func scheduleUpdateSize() {
+        scheduledSizeUpdate?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.updateSizeIfNeeded()
+        }
+        scheduledSizeUpdate = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: work)
+    }
+
+    private func updateSizeIfNeeded() {
         guard let panel, let contentView = panel.contentView else { return }
-        let newSize = contentView.fittingSize
+
+        // Round up to whole pixels to avoid size "thrash" from fractional layout values.
+        let fitting = contentView.fittingSize
+        let newSize = NSSize(width: ceil(fitting.width), height: ceil(fitting.height))
+
+        let current = panel.contentRect(forFrameRect: panel.frame).size
+        let dw = abs(newSize.width - current.width)
+        let dh = abs(newSize.height - current.height)
+        guard dw > 0.5 || dh > 0.5 else { return }
+
         panel.setContentSize(newSize)
         positionAtBottomCenter(panel)
     }

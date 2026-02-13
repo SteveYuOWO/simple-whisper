@@ -338,8 +338,12 @@ final class AppState {
         }
 
         // 2. Check microphone permission
-        let micAuth = AVCaptureDevice.authorizationStatus(for: .audio)
-        if micAuth != .authorized {
+        let micStatus = AudioRecorder.microphonePermissionStatus()
+        print("[AppState] Mic permission status=\(micStatus.rawValue)")
+        switch micStatus {
+        case .granted:
+            break
+        case .undetermined:
             Task { [weak self] in
                 let granted = await AudioRecorder.requestMicrophonePermission()
                 await MainActor.run {
@@ -351,6 +355,9 @@ final class AppState {
                     }
                 }
             }
+            return
+        case .denied:
+            showError(lang.errorNoMicPermission, navigateTo: .input)
             return
         }
 
@@ -376,6 +383,10 @@ final class AppState {
             print("[AppState] Recording started")
         } catch {
             print("[AppState] Failed to start recording: \(error)")
+            if let recErr = error as? AudioRecorder.RecordingError, recErr == .noMicrophonePermission {
+                showError(lang.errorNoMicPermission, navigateTo: .input)
+                return
+            }
             resetToIdle()
             return
         }
