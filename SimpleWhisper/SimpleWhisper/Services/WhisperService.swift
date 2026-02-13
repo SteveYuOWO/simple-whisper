@@ -21,7 +21,7 @@ actor WhisperService {
         whisperKit = kit
     }
 
-    func transcribe(audioData: [Float], whisperCode: String?) async throws -> String {
+    func transcribe(audioData: [Float], whisperCode: String?, promptText: String? = nil) async throws -> String {
         guard let whisperKit else {
             throw WhisperError.modelNotLoaded
         }
@@ -32,6 +32,16 @@ actor WhisperService {
             options.language = whisperCode
         } else {
             options.detectLanguage = true
+        }
+
+        // Set prompt tokens to guide mixed-language transcription
+        if let promptText, let tokenizer = whisperKit.tokenizer {
+            let tokens = tokenizer.encode(text: " " + promptText.trimmingCharacters(in: .whitespaces))
+                .filter { $0 < tokenizer.specialTokens.specialTokenBegin }
+            if !tokens.isEmpty {
+                options.promptTokens = tokens
+                options.usePrefillPrompt = true
+            }
         }
 
         let results = try await whisperKit.transcribe(audioArray: audioData, decodeOptions: options)

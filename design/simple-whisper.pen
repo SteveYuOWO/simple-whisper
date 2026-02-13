@@ -294,7 +294,7 @@
                   "type": "text",
                   "id": "MAgS2",
                   "name": "lbl2",
-                  "fill": "$accent",
+                  "fill": "#ffca28",
                   "content": "Recording",
                   "fontFamily": "Inter",
                   "fontSize": 12,
@@ -340,7 +340,7 @@
                           "name": "pop2icon",
                           "width": 48,
                           "height": 48,
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "cornerRadius": 24,
                           "layout": "vertical",
                           "justifyContent": "center",
@@ -383,7 +383,7 @@
                               "cornerRadius": 2,
                               "id": "8egS5",
                               "name": "b1",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 10
                             },
@@ -392,7 +392,7 @@
                               "cornerRadius": 2,
                               "id": "JMofs",
                               "name": "b2",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 22
                             },
@@ -401,7 +401,7 @@
                               "cornerRadius": 2,
                               "id": "tXsXi",
                               "name": "b3",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 32
                             },
@@ -410,7 +410,7 @@
                               "cornerRadius": 2,
                               "id": "9JJ5x",
                               "name": "b4",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 16
                             },
@@ -419,7 +419,7 @@
                               "cornerRadius": 2,
                               "id": "sVPJT",
                               "name": "b5",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 28
                             },
@@ -428,7 +428,7 @@
                               "cornerRadius": 2,
                               "id": "Vbm4h",
                               "name": "b6",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 12
                             },
@@ -437,7 +437,7 @@
                               "cornerRadius": 2,
                               "id": "qiZO6",
                               "name": "b7",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 24
                             },
@@ -446,7 +446,7 @@
                               "cornerRadius": 2,
                               "id": "VTzPW",
                               "name": "b8",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 8
                             },
@@ -455,7 +455,7 @@
                               "cornerRadius": 2,
                               "id": "Gf8g3",
                               "name": "b9",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 18
                             },
@@ -464,7 +464,7 @@
                               "cornerRadius": 2,
                               "id": "npXax",
                               "name": "b10",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 26
                             }
@@ -496,7 +496,7 @@
                           "type": "text",
                           "id": "HJ5v1",
                           "name": "pop2dur",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "content": "0:03",
                           "fontFamily": "Inter",
                           "fontSize": 13,
@@ -618,7 +618,7 @@
                               "cornerRadius": 2,
                               "id": "Auue0",
                               "name": "pop3bar",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 140,
                               "height": 4
                             }
@@ -906,7 +906,7 @@
                   "height": 18,
                   "iconFontName": "audio-waveform",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent"
+                  "fill": "#ffca28"
                 },
                 {
                   "type": "text",
@@ -1105,7 +1105,7 @@
                       "name": "tog1",
                       "width": 42,
                       "height": 26,
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "cornerRadius": 13,
                       "padding": 2,
                       "justifyContent": "end",
@@ -1182,7 +1182,7 @@
                       "name": "tog2",
                       "width": 42,
                       "height": 26,
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "cornerRadius": 13,
                       "padding": 2,
                       "justifyContent": "end",
@@ -1509,7 +1509,7 @@
                   "type": "text",
                   "id": "TMNPK",
                   "name": "lbl2",
-                  "fill": "$accent",
+                  "fill": "#ffca28",
                   "content": "Recording",
                   "fontFamily": "Inter",
                   "fontSize": 12,
@@ -1555,7 +1555,7 @@
                           "name": "pop2icon",
                           "width": 48,
                           "height": 48,
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "cornerRadius": 24,
                           "layout": "vertical",
                           "justifyContent": "center",
@@ -1598,7 +1598,7 @@
                               "cornerRadius": 2,
                               "id": "NchhD",
                               "name": "b1",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 10
                             },
@@ -1607,7 +1607,7 @@
                               "cornerRadius": 2,
                               "id": "ms1Yy",
                               "name": "b2",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 22
                             },
@@ -1616,7 +1616,7 @@
                               "cornerRadius": 2,
                               "id": "1mGqO",
                               "name": "b3",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 32
                             },
@@ -1625,7 +1625,7 @@
                               "cornerRadius": 2,
                               "id": "B3ijw",
                               "name": "b4",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 16
                             },
@@ -1634,7 +1634,7 @@
                               "cornerRadius": 2,
                               "id": "ZI19T",
                               "name": "b5",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 28
                             },
@@ -1643,7 +1643,7 @@
                               "cornerRadius": 2,
                               "id": "jJ5MR",
                               "name": "b6",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 12
                             },
@@ -1652,7 +1652,7 @@
                               "cornerRadius": 2,
                               "id": "RWsme",
                               "name": "b7",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 24
                             },
@@ -1661,7 +1661,7 @@
                               "cornerRadius": 2,
                               "id": "uIPEZ",
                               "name": "b8",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 8
                             },
@@ -1670,7 +1670,7 @@
                               "cornerRadius": 2,
                               "id": "AzD9Q",
                               "name": "b9",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 18
                             },
@@ -1679,7 +1679,7 @@
                               "cornerRadius": 2,
                               "id": "tE1Lw",
                               "name": "b10",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 26
                             }
@@ -1711,7 +1711,7 @@
                           "type": "text",
                           "id": "2igY6",
                           "name": "pop2dur",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "content": "0:03",
                           "fontFamily": "Inter",
                           "fontSize": 13,
@@ -1833,7 +1833,7 @@
                               "cornerRadius": 2,
                               "id": "r4vzU",
                               "name": "pop3bar",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 140,
                               "height": 4
                             }
@@ -2354,7 +2354,7 @@
                   "type": "text",
                   "id": "MidCM",
                   "name": "lbl2",
-                  "fill": "$accent",
+                  "fill": "#ffca28",
                   "content": "錄音中",
                   "fontFamily": "Inter",
                   "fontSize": 12,
@@ -2400,7 +2400,7 @@
                           "name": "pop2icon",
                           "width": 48,
                           "height": 48,
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "cornerRadius": 24,
                           "layout": "vertical",
                           "justifyContent": "center",
@@ -2443,7 +2443,7 @@
                               "cornerRadius": 2,
                               "id": "wN2AT",
                               "name": "b1",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 10
                             },
@@ -2452,7 +2452,7 @@
                               "cornerRadius": 2,
                               "id": "vT5dN",
                               "name": "b2",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 22
                             },
@@ -2461,7 +2461,7 @@
                               "cornerRadius": 2,
                               "id": "AeUf0",
                               "name": "b3",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 32
                             },
@@ -2470,7 +2470,7 @@
                               "cornerRadius": 2,
                               "id": "0Csia",
                               "name": "b4",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 16
                             },
@@ -2479,7 +2479,7 @@
                               "cornerRadius": 2,
                               "id": "Vd9B9",
                               "name": "b5",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 28
                             },
@@ -2488,7 +2488,7 @@
                               "cornerRadius": 2,
                               "id": "Ajz9n",
                               "name": "b6",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 12
                             },
@@ -2497,7 +2497,7 @@
                               "cornerRadius": 2,
                               "id": "MsWuV",
                               "name": "b7",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 24
                             },
@@ -2506,7 +2506,7 @@
                               "cornerRadius": 2,
                               "id": "8uzQq",
                               "name": "b8",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 8
                             },
@@ -2515,7 +2515,7 @@
                               "cornerRadius": 2,
                               "id": "SqSpJ",
                               "name": "b9",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 18
                             },
@@ -2524,7 +2524,7 @@
                               "cornerRadius": 2,
                               "id": "mrF6d",
                               "name": "b10",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 26
                             }
@@ -2556,7 +2556,7 @@
                           "type": "text",
                           "id": "367Nv",
                           "name": "pop2dur",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "content": "0:03",
                           "fontFamily": "Inter",
                           "fontSize": 13,
@@ -2678,7 +2678,7 @@
                               "cornerRadius": 2,
                               "id": "0gBUM",
                               "name": "pop3bar",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 140,
                               "height": 4
                             }
@@ -3199,7 +3199,7 @@
                   "type": "text",
                   "id": "ZzPnz",
                   "name": "lbl2",
-                  "fill": "$accent",
+                  "fill": "#ffca28",
                   "content": "錄音中",
                   "fontFamily": "Inter",
                   "fontSize": 12,
@@ -3245,7 +3245,7 @@
                           "name": "pop2icon",
                           "width": 48,
                           "height": 48,
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "cornerRadius": 24,
                           "layout": "vertical",
                           "justifyContent": "center",
@@ -3288,7 +3288,7 @@
                               "cornerRadius": 2,
                               "id": "Y7ucx",
                               "name": "b1",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 10
                             },
@@ -3297,7 +3297,7 @@
                               "cornerRadius": 2,
                               "id": "3EEqr",
                               "name": "b2",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 22
                             },
@@ -3306,7 +3306,7 @@
                               "cornerRadius": 2,
                               "id": "vUK5U",
                               "name": "b3",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 32
                             },
@@ -3315,7 +3315,7 @@
                               "cornerRadius": 2,
                               "id": "ougVZ",
                               "name": "b4",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 16
                             },
@@ -3324,7 +3324,7 @@
                               "cornerRadius": 2,
                               "id": "vfEDo",
                               "name": "b5",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 28
                             },
@@ -3333,7 +3333,7 @@
                               "cornerRadius": 2,
                               "id": "qwxPJ",
                               "name": "b6",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 12
                             },
@@ -3342,7 +3342,7 @@
                               "cornerRadius": 2,
                               "id": "8vECH",
                               "name": "b7",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 24
                             },
@@ -3351,7 +3351,7 @@
                               "cornerRadius": 2,
                               "id": "hhLbS",
                               "name": "b8",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 8
                             },
@@ -3360,7 +3360,7 @@
                               "cornerRadius": 2,
                               "id": "eBS9w",
                               "name": "b9",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 18
                             },
@@ -3369,7 +3369,7 @@
                               "cornerRadius": 2,
                               "id": "TzUoJ",
                               "name": "b10",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 4,
                               "height": 26
                             }
@@ -3401,7 +3401,7 @@
                           "type": "text",
                           "id": "92JBS",
                           "name": "pop2dur",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "content": "0:03",
                           "fontFamily": "Inter",
                           "fontSize": 13,
@@ -3523,7 +3523,7 @@
                               "cornerRadius": 2,
                               "id": "7wSMz",
                               "name": "pop3bar",
-                              "fill": "$accent",
+                              "fill": "#ffca28",
                               "width": 140,
                               "height": 4
                             }
@@ -3811,7 +3811,7 @@
                   "height": 18,
                   "iconFontName": "audio-waveform",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent"
+                  "fill": "#ffca28"
                 },
                 {
                   "type": "text",
@@ -4010,7 +4010,7 @@
                       "name": "tog1",
                       "width": 42,
                       "height": 26,
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "cornerRadius": 13,
                       "padding": 2,
                       "justifyContent": "end",
@@ -4087,7 +4087,7 @@
                       "name": "tog2",
                       "width": 42,
                       "height": 26,
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "cornerRadius": 13,
                       "padding": 2,
                       "justifyContent": "end",
@@ -4181,7 +4181,7 @@
                   "height": 18,
                   "iconFontName": "audio-waveform",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent"
+                  "fill": "#ffca28"
                 },
                 {
                   "type": "text",
@@ -4380,7 +4380,7 @@
                       "name": "tog1",
                       "width": 42,
                       "height": 26,
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "cornerRadius": 13,
                       "padding": 2,
                       "justifyContent": "end",
@@ -4457,7 +4457,7 @@
                       "name": "tog2",
                       "width": 42,
                       "height": 26,
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "cornerRadius": 13,
                       "padding": 2,
                       "justifyContent": "end",
@@ -4551,7 +4551,7 @@
                   "height": 18,
                   "iconFontName": "audio-waveform",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent"
+                  "fill": "#ffca28"
                 },
                 {
                   "type": "text",
@@ -4750,7 +4750,7 @@
                       "name": "tog1",
                       "width": 42,
                       "height": 26,
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "cornerRadius": 13,
                       "padding": 2,
                       "justifyContent": "end",
@@ -4827,7 +4827,7 @@
                       "name": "tog2",
                       "width": 42,
                       "height": 26,
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "cornerRadius": 13,
                       "padding": 2,
                       "justifyContent": "end",
@@ -4917,59 +4917,6 @@
                   "fontFamily": "Inter",
                   "fontSize": 11,
                   "fontWeight": "500"
-                },
-                {
-                  "type": "frame",
-                  "id": "ZlzD1",
-                  "name": "Pill — Idle",
-                  "fill": "#1C1C1E",
-                  "cornerRadius": 24,
-                  "effect": {
-                    "type": "shadow",
-                    "shadowType": "outer",
-                    "color": "#00000040",
-                    "offset": {
-                      "x": 0,
-                      "y": 8
-                    },
-                    "blur": 30
-                  },
-                  "gap": 10,
-                  "padding": [
-                    10,
-                    16
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "zG59e",
-                      "name": "idleIcon",
-                      "width": 16,
-                      "height": 16,
-                      "iconFontName": "mic",
-                      "iconFontFamily": "lucide",
-                      "fill": "#FFFFFF80"
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "hkaLl",
-                      "name": "idleDot",
-                      "fill": "#48484A",
-                      "width": 6,
-                      "height": 6
-                    },
-                    {
-                      "type": "text",
-                      "id": "mqcn7",
-                      "name": "idleText",
-                      "fill": "#FFFFFF80",
-                      "content": "Ready",
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    }
-                  ]
                 }
               ]
             },
@@ -5045,7 +4992,7 @@
                           "cornerRadius": 2,
                           "id": "jmRD0",
                           "name": "bar1",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "width": 3,
                           "height": 8
                         },
@@ -5054,7 +5001,7 @@
                           "cornerRadius": 2,
                           "id": "j8N5S",
                           "name": "bar2",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "width": 3,
                           "height": 16
                         },
@@ -5063,7 +5010,7 @@
                           "cornerRadius": 2,
                           "id": "H2EVy",
                           "name": "bar3",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "width": 3,
                           "height": 20
                         },
@@ -5072,7 +5019,7 @@
                           "cornerRadius": 2,
                           "id": "W4r8F",
                           "name": "bar4",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "width": 3,
                           "height": 12
                         },
@@ -5081,7 +5028,7 @@
                           "cornerRadius": 2,
                           "id": "K957C",
                           "name": "bar5",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "width": 3,
                           "height": 18
                         },
@@ -5090,7 +5037,7 @@
                           "cornerRadius": 2,
                           "id": "gOb4w",
                           "name": "bar6",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "width": 3,
                           "height": 10
                         },
@@ -5099,7 +5046,7 @@
                           "cornerRadius": 2,
                           "id": "CkxYT",
                           "name": "bar7",
-                          "fill": "$accent",
+                          "fill": "#ffca28",
                           "width": 3,
                           "height": 14
                         }
@@ -5268,7 +5215,7 @@
       "name": "AppIcon 1024x1024",
       "width": 1024,
       "height": 1024,
-      "fill": "#F0B90B",
+      "fill": "#FFCA28",
       "cornerRadius": 228,
       "justifyContent": "center",
       "alignItems": "center",
@@ -5345,7 +5292,7 @@
                   "height": 18,
                   "iconFontName": "audio-waveform",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent"
+                  "fill": "#ffca28"
                 },
                 {
                   "type": "text",
@@ -5848,19 +5795,7 @@
                     "fill": "$separator"
                   },
                   "layout": "vertical",
-                  "padding": 12,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "ZCZ7a",
-                      "name": "testPlaceholder",
-                      "fill": "$text-tertiary",
-                      "content": "Type here to test your input...",
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    }
-                  ]
+                  "padding": 12
                 }
               ]
             }
@@ -5928,7 +5863,7 @@
                   "height": 18,
                   "iconFontName": "audio-waveform",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent"
+                  "fill": "#ffca28"
                 },
                 {
                   "type": "text",
@@ -6330,7 +6265,7 @@
                       "type": "ellipse",
                       "id": "5gOCh",
                       "name": "scDot",
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "width": 8,
                       "height": 8
                     },
@@ -6528,7 +6463,7 @@
                   "height": 18,
                   "iconFontName": "audio-waveform",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent"
+                  "fill": "#ffca28"
                 },
                 {
                   "type": "text",
@@ -6930,7 +6865,7 @@
                       "type": "ellipse",
                       "id": "kJuVT",
                       "name": "scDot",
-                      "fill": "$accent",
+                      "fill": "#ffca28",
                       "width": 8,
                       "height": 8
                     },
@@ -7129,7 +7064,7 @@
                   "height": 18,
                   "iconFontName": "audio-waveform",
                   "iconFontFamily": "lucide",
-                  "fill": "$accent"
+                  "fill": "#ffca28"
                 },
                 {
                   "type": "text",
@@ -7612,7 +7547,14 @@
   "variables": {
     "accent": {
       "type": "color",
-      "value": "#F0B90B"
+      "value": [
+        {
+          "value": "#F0B90B"
+        },
+        {
+          "value": "#FFCA28"
+        }
+      ]
     },
     "accent-text": {
       "type": "color",

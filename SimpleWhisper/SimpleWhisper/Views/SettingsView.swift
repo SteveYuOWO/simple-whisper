@@ -47,7 +47,7 @@ struct SettingsView: View {
 
                 Spacer()
             }
-            .padding(EdgeInsets(top: 20, leading: 12, bottom: 20, trailing: 12))
+            .padding(EdgeInsets(top: 48, leading: 12, bottom: 20, trailing: 12))
             .frame(width: DS.settingsSidebarWidth)
             .frame(maxHeight: .infinity)
             .background(Color.bgSecondary)
@@ -73,7 +73,7 @@ struct SettingsView: View {
 
                 Spacer()
             }
-            .padding(EdgeInsets(top: 24, leading: 28, bottom: 24, trailing: 28))
+            .padding(EdgeInsets(top: 52, leading: 28, bottom: 24, trailing: 28))
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(minWidth: DS.settingsMinWidth, minHeight: DS.settingsMinHeight)

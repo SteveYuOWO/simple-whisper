@@ -52,6 +52,7 @@ struct SimpleWhisperApp: App {
         .windowResizability(.contentMinSize)
         .defaultLaunchBehavior(.presented)
         .defaultPosition(.center)
+        .windowStyle(.hiddenTitleBar)
     }
 }
 

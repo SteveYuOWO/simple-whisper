@@ -461,9 +461,14 @@ final class AppState {
                 }
 
                 let langCode = selectedLanguage.whisperCode
+                // Mixed-language prompt to guide Whisper for Chinese-English code-switching
+                let prompt: String? = (langCode == "zh" || langCode == nil)
+                    ? "这是一段中英文混合的语音，其中可能包含English words和技术术语如API、iPhone、Python等。"
+                    : nil
                 let text = try await whisperService.transcribe(
                     audioData: samples,
-                    whisperCode: langCode
+                    whisperCode: langCode,
+                    promptText: prompt
                 )
 
                 let elapsed = CFAbsoluteTimeGetCurrent() - startTime

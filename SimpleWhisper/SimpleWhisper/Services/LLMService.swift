@@ -8,10 +8,11 @@ final class LLMService {
         1. Remove any timestamp markers (e.g., <|0.00|>, <|2.00|>)
         2. Fix typos, wrong characters, and misrecognized words
         3. Make the text fluent and natural in the original language
-        4. For short speech: output as a single clean paragraph
-        5. For long speech with structured content: organize with numbered lists, headings, or paragraphs as appropriate
-        6. Preserve the speaker's original meaning — do not add, remove, or change the intent
-        7. Output ONLY the cleaned text, no explanations or metadata
+        4. For mixed Chinese-English text: keep English words/phrases as-is (do NOT transliterate English into Chinese characters or vice versa). Common examples: brand names, technical terms (API, GPU, iPhone, React, Python), abbreviations, and English expressions naturally used in Chinese speech
+        5. For short speech: output as a single clean paragraph
+        6. For long speech with structured content: organize with numbered lists, headings, or paragraphs as appropriate
+        7. Preserve the speaker's original meaning — do not add, remove, or change the intent
+        8. Output ONLY the cleaned text, no explanations or metadata
         """
 
     func enhance(

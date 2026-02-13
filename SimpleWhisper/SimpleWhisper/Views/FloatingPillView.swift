@@ -96,9 +96,7 @@ struct FloatingPillView: View {
 
     private var processingPill: some View {
         HStack(spacing: 10) {
-            ProgressView()
-                .controlSize(.small)
-                .tint(.white.opacity(0.6))
+            SpinnerRing()
             Text(lang.processing)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
@@ -110,9 +108,7 @@ struct FloatingPillView: View {
 
     private var enhancingPill: some View {
         HStack(spacing: 10) {
-            ProgressView()
-                .controlSize(.small)
-                .tint(.white.opacity(0.6))
+            SpinnerRing()
             Text(lang.processing)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
@@ -163,6 +159,26 @@ private struct PillStyleModifier: ViewModifier {
 extension View {
     fileprivate func pillStyle() -> some View {
         modifier(PillStyleModifier())
+    }
+}
+
+// MARK: - Spinner Ring
+
+private struct SpinnerRing: View {
+    @State private var isSpinning = false
+
+    var body: some View {
+        Circle()
+            .stroke(Color(hex: 0x48484A), lineWidth: 2)
+            .frame(width: 16, height: 16)
+            .overlay {
+                Circle()
+                    .trim(from: 0, to: 0.25)
+                    .stroke(Color.brand, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .rotationEffect(.degrees(isSpinning ? 360 : 0))
+                    .animation(.linear(duration: 0.8).repeatForever(autoreverses: false), value: isSpinning)
+            }
+            .onAppear { isSpinning = true }
     }
 }
 
