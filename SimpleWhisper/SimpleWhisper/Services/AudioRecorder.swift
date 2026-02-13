@@ -83,6 +83,11 @@ final class AudioRecorder {
         // stop→start cycle the graph can be stale, causing -10877.
         engine.reset()
 
+        // Give the audio graph a moment to fully reinitialize after reset.
+        // Without this, accessing inputNode immediately can trigger
+        // internal -10877 (kAudioUnitErr_NoConnection) framework logs.
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+
         let inputNode = engine.inputNode
         let hardwareFormat = inputNode.outputFormat(forBus: 0)
 

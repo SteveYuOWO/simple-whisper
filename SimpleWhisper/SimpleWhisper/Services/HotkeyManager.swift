@@ -312,7 +312,7 @@ final class HotkeyManager {
     }
 
     /// Called directly on the tap thread (not main) to re-enable a timed-out tap
-    /// as fast as possible. State reset is dispatched to main for thread safety.
+    /// as fast as possible. State reconciliation is dispatched to main for thread safety.
     fileprivate func reEnableTapIfNeeded() {
         guard let tap = eventTap else { return }
         // CGEvent.tapEnable is thread-safe — call it immediately on the tap
@@ -320,14 +320,34 @@ final class HotkeyManager {
         CGEvent.tapEnable(tap: tap, enable: true)
 
         DispatchQueue.main.async { [self] in
-            if self.isHotkeyPressed {
-                self.isHotkeyPressed = false
-                self.isRequiredKeyHeld = false
-                self.fnDown = false
-                self.fnFlagReliable = false
-                print("[HotkeyManager] Re-enabled event tap (reset stuck hotkey state)")
-                self.onKeyUp?()
+            // Query the real keyboard state instead of blindly resetting.
+            // This avoids falsely firing onKeyUp when the user is still
+            // holding the hotkey (e.g. during heavy audio engine work).
+            let currentFlags = CGEventSource.flagsState(.combinedSessionState)
+
+            let fnFlag = currentFlags.contains(.maskSecondaryFn)
+            if fnFlag { self.fnFlagReliable = true }
+            if self.fnFlagReliable {
+                self.fnDown = fnFlag
             }
+
+            if self.requiredKeyCode >= 0 {
+                self.isRequiredKeyHeld = CGEventSource.keyState(
+                    .combinedSessionState,
+                    key: CGKeyCode(self.requiredKeyCode)
+                )
+            }
+
+            // Re-evaluate with actual state — fires onKeyDown/onKeyUp only
+            // if the real state differs from what we previously recorded.
+            self.checkHotkeyState(
+                controlDown: currentFlags.contains(.maskControl),
+                optionDown: currentFlags.contains(.maskAlternate),
+                commandDown: currentFlags.contains(.maskCommand),
+                shiftDown: currentFlags.contains(.maskShift)
+            )
+
+            print("[HotkeyManager] Re-enabled event tap (reconciled with live keyboard state)")
         }
     }
 

@@ -53,7 +53,7 @@ struct SettingsView: View {
             .background(Color.bgSecondary)
 
             // MARK: - Content
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 14) {
                 Text(selectedTab.title(lang))
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(Color.textPrimary)
@@ -73,7 +73,7 @@ struct SettingsView: View {
 
                 Spacer()
             }
-            .padding(EdgeInsets(top: 52, leading: 28, bottom: 24, trailing: 28))
+            .padding(EdgeInsets(top: 40, leading: 28, bottom: 24, trailing: 28))
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(minWidth: DS.settingsMinWidth, minHeight: DS.settingsMinHeight)

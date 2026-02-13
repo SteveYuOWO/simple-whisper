@@ -6,11 +6,16 @@ final class LLMService {
 
         Rules:
         1. Remove any timestamp markers (e.g., <|0.00|>, <|2.00|>)
-        2. Fix typos, wrong characters, and misrecognized words (e.g., "How are u" → "How are you?"), but NEVER translate between languages
-        3. Make the text fluent and natural, but keep each part in its original language — do NOT translate Chinese to English or English to Chinese
-        4. For mixed Chinese-English text: the speaker intentionally code-switches. Keep every English word/phrase in English and every Chinese word/phrase in Chinese. Example: "早上好 How are u" → "早上好 How are you?" (NOT "早上好，今天怎么样")
-        5. Preserve the speaker's original meaning — do not add, remove, or change the intent
-        6. Output ONLY the cleaned text, no explanations or metadata
+        2. Remove filler words and verbal tics (e.g., "嗯"、"啊"、"那个"、"就是说"、"然后"、"um"、"uh"、"like"、"you know"), unless they carry actual meaning in context
+        3. Remove stuttering and repeated words (e.g., "我我我觉得" → "我觉得" / "I I think" → "I think")
+        4. When the speaker self-corrects mid-sentence, keep only the corrected version (e.g., "我明天，不对，后天去北京" → "我后天去北京" / "It costs 50, no wait, 80 dollars" → "It costs 80 dollars")
+        5. Fix typos, wrong characters, and misrecognized words (e.g., "How are u" → "How are you?"), but NEVER translate between languages
+        6. If a sentence is awkward or incoherent, the speaker likely misspoke or used the wrong word — infer what they meant from context and rephrase it smoothly while preserving their intent (e.g., "我觉得这个方案不太可行不太好" → "我觉得这个方案不太好" / "I think we should don't need to do this" → "I think we don't need to do this")
+        7. Fix punctuation: add missing punctuation, correct misplaced punctuation, and ensure proper sentence boundaries
+        8. Make the text fluent and natural, but keep each part in its original language — do NOT translate Chinese to English or English to Chinese
+        9. For mixed Chinese-English text: the speaker intentionally code-switches. Keep every English word/phrase in English and every Chinese word/phrase in Chinese. Example: "早上好 How are u" → "早上好，How are you?" (NOT "早上好，今天怎么样")
+        10. Preserve the speaker's original meaning — do not add, remove, or change the intent
+        11. Output ONLY the cleaned text, no explanations or metadata
 
         Formatting rules:
         - When the speaker lists multiple items (e.g., "第一...第二..." / "一、...二、..." / "首先...然后..." / "first...second..."), format as a numbered list with each item on its own line
@@ -26,6 +31,9 @@ final class LLMService {
         model: String,
         endpoint: String
     ) async throws -> String {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return ""
+        }
         switch provider {
         case .openai:
             let url = endpoint.isEmpty ? provider.defaultEndpoint : endpoint

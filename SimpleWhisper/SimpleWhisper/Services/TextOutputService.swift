@@ -16,10 +16,13 @@ final class TextOutputService {
         pasteboard.setString(text, forType: .string)
 
         // Let pasteboard settle, then paste, then restore clipboard.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
+        // 150ms gives the pasteboard server time to propagate the change.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             self?.simulatePaste()
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            // Wait long enough for the target app to read the pasteboard.
+            // Some apps (Electron-based like VS Code, Slack) read asynchronously.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 pasteboard.clearContents()
                 if let contents = previousContents {
                     for (typeRaw, data) in contents {
@@ -31,9 +34,11 @@ final class TextOutputService {
     }
 
     private func simulatePaste() {
-        let source = CGEventSource(stateID: .combinedSessionState)
+        // Use a private event source so the synthesised key-strokes are
+        // independent of the user's real keyboard state (avoids conflicts
+        // when modifier keys happen to be held).
+        let source = CGEventSource(stateID: .privateState)
 
-        // More reliable than only setting flags on the 'v' event: press Cmd down, then V, then release.
         let cmdDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Command), keyDown: true)
         let vDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true)
         let vUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false)
@@ -44,9 +49,14 @@ final class TextOutputService {
         vUp?.flags = .maskCommand
         cmdUp?.flags = []
 
+        // Small delays between events for apps that process key events asynchronously.
+        let delay: TimeInterval = 0.01
         cmdDown?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: delay)
         vDown?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: delay)
         vUp?.post(tap: .cghidEventTap)
+        Thread.sleep(forTimeInterval: delay)
         cmdUp?.post(tap: .cghidEventTap)
     }
 }
