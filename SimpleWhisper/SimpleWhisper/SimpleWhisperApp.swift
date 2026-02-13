@@ -6,9 +6,20 @@ import SwiftUI
 
 @main
 struct SimpleWhisperApp: App {
+    @State private var appState = AppState()
+    @State private var panelController: FloatingPanelController?
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        Window("Settings", id: "settings") {
+            SettingsView()
+                .environment(appState)
+                .onAppear {
+                    if panelController == nil {
+                        panelController = FloatingPanelController(appState: appState)
+                    }
+                }
         }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(.presented)
     }
 }
