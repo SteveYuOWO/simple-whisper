@@ -151,6 +151,7 @@ final class AppState {
     private let textOutputService = TextOutputService()
     private let llmService = LLMService()
     private let soundService = SoundService.shared
+    let updaterManager = UpdaterManager()
 
     // MARK: - Timers
 

@@ -227,16 +227,6 @@ struct SettingsInputSection: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.themeSeparator, lineWidth: 1)
                     )
-                    .overlay(alignment: .topLeading) {
-                        if state.testInputText.isEmpty {
-                            Text(lang.testInputPlaceholder)
-                                .font(.system(size: 14))
-                                .foregroundStyle(Color.textTertiary)
-                                .padding(.horizontal, 13)
-                                .padding(.vertical, 12)
-                                .allowsHitTesting(false)
-                        }
-                    }
             }
             .padding(EdgeInsets(top: 20, leading: 16, bottom: 20, trailing: 16))
             .background(Color.bgPrimary, in: RoundedRectangle(cornerRadius: DS.settingsCardCornerRadius))

@@ -17,6 +17,24 @@ extension AppLanguage {
         case .zh: "声音反馈"
         }
     }
+    var autoCheckUpdates: String {
+        switch self {
+        case .en: "Auto Check for Updates"
+        case .zh: "自动检查更新"
+        }
+    }
+    var checkForUpdates: String {
+        switch self {
+        case .en: "Check for Updates"
+        case .zh: "检查更新"
+        }
+    }
+    var currentVersion: String {
+        switch self {
+        case .en: "Version"
+        case .zh: "版本"
+        }
+    }
     var language: String {
         switch self {
         case .en: "Language"

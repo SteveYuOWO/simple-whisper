@@ -28,7 +28,7 @@ extension Color {
 
 extension Color {
     // Accent (constant across modes)
-    static let brand = Color(hex: 0xF0B90B)
+    static let brand = Color(hex: 0xFFCA28)
     static let brandText = Color.black
 
     // Backgrounds

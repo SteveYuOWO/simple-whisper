@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F4A82BD22F3F0EC5009973BA /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = F465A0212F3EFC540080085F /* WhisperKit */; };
+		F4B82C322F3F1A000099AABB /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = F4B82C312F3F1A000099AABB /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F4A82BD22F3F0EC5009973BA /* WhisperKit in Frameworks */,
+				F4B82C322F3F1A000099AABB /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +120,7 @@
 			name = SimpleWhisper;
 			packageProductDependencies = (
 				F465A0212F3EFC540080085F /* WhisperKit */,
+				F4B82C312F3F1A000099AABB /* Sparkle */,
 			);
 			productName = SimpleWhisper;
 			productReference = F4659FEA2F3EFC540080085F /* SimpleWhisper.app */;
@@ -203,6 +206,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F465A0202F3EFC540080085F /* XCRemoteSwiftPackageReference "WhisperKit" */,
+				F4B82C302F3F1A000099AABB /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F4659FEB2F3EFC540080085F /* Products */;
@@ -415,6 +419,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SimpleWhisper needs microphone access to record audio for speech-to-text transcription.";
+				INFOPLIST_KEY_SUFeedURL = "https://github.com/SteveYuOWO/simple-whisper/releases/latest/download/appcast.xml";
+				INFOPLIST_KEY_SUPublicEDKey = "fnqCZWaCBmfkNFLRgeQRnLQrVvH7OpqALsUsM6jUpZQ=";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -447,6 +453,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SimpleWhisper needs microphone access to record audio for speech-to-text transcription.";
+				INFOPLIST_KEY_SUFeedURL = "https://github.com/SteveYuOWO/simple-whisper/releases/latest/download/appcast.xml";
+				INFOPLIST_KEY_SUPublicEDKey = "fnqCZWaCBmfkNFLRgeQRnLQrVvH7OpqALsUsM6jUpZQ=";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -594,6 +602,14 @@
 				minimumVersion = 0.9.0;
 			};
 		};
+		F4B82C302F3F1A000099AABB /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -601,6 +617,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F465A0202F3EFC540080085F /* XCRemoteSwiftPackageReference "WhisperKit" */;
 			productName = WhisperKit;
+		};
+		F4B82C312F3F1A000099AABB /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F4B82C302F3F1A000099AABB /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
