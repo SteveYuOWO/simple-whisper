@@ -19,6 +19,9 @@ final class HotkeyManager {
     private var fnDown = false
     private var fnFlagReliable = false
 
+    private var modifierMonitorCallback: (([String]) -> Void)?
+    private var isMonitoring = false
+
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var isHotkeyPressed = false
@@ -78,6 +81,18 @@ final class HotkeyManager {
         isHotkeyPressed = false
         fnDown = false
         fnFlagReliable = false
+    }
+
+    func startModifierMonitor(callback: @escaping ([String]) -> Void) {
+        isMonitoring = true
+        modifierMonitorCallback = callback
+        start()
+    }
+
+    func stopModifierMonitor() {
+        isMonitoring = false
+        modifierMonitorCallback = nil
+        stop()
     }
 
     func updateModifiers(from modifierStrings: [String]) {
@@ -142,6 +157,18 @@ final class HotkeyManager {
             fnDown.toggle()
         }
 
+        // Modifier monitor mode: report all currently pressed modifiers
+        if isMonitoring {
+            var currentModifiers: [String] = []
+            if fnDown { currentModifiers.append("fn") }
+            if controlDown { currentModifiers.append("control") }
+            if optionDown { currentModifiers.append("option") }
+            if commandDown { currentModifiers.append("command") }
+            if shiftDown { currentModifiers.append("shift") }
+            modifierMonitorCallback?(currentModifiers)
+            return
+        }
+
         let matched =
             (!requiresFn || fnDown) &&
             (!requiresControl || controlDown) &&
@@ -188,8 +215,6 @@ private func hotkeyCallback(
         }
         return Unmanaged.passUnretained(event)
     }
-
-    let flags = event.flags
 
     DispatchQueue.main.async {
         manager.handleFlagsChanged(event)

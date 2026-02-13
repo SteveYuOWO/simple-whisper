@@ -155,6 +155,12 @@ extension AppLanguage {
         case .zh: "申请权限"
         }
     }
+    var pressModifierKeys: String {
+        switch self {
+        case .en: "Press modifier keys..."
+        case .zh: "请按下修饰键..."
+        }
+    }
     var accessibilityPermission: String {
         switch self {
         case .en: "Accessibility"
@@ -222,6 +228,195 @@ extension AppLanguage {
         switch self {
         case .en: "\(count) words"
         case .zh: "\(count) 个词"
+        }
+    }
+
+    // MARK: Settings - AI Enhancement
+
+    var enableAIEnhancement: String {
+        switch self {
+        case .en: "Enable AI Enhancement"
+        case .zh: "启用 AI 优化"
+        }
+    }
+    var aiProvider: String {
+        switch self {
+        case .en: "Provider"
+        case .zh: "服务商"
+        }
+    }
+    var apiKey: String {
+        switch self {
+        case .en: "API Key"
+        case .zh: "API Key"
+        }
+    }
+    var model: String {
+        switch self {
+        case .en: "Model"
+        case .zh: "模型"
+        }
+    }
+    var endpoint: String {
+        switch self {
+        case .en: "Endpoint"
+        case .zh: "端点"
+        }
+    }
+    var testConnection: String {
+        switch self {
+        case .en: "Test Connection"
+        case .zh: "测试连接"
+        }
+    }
+    var testSuccess: String {
+        switch self {
+        case .en: "Connection successful"
+        case .zh: "连接成功"
+        }
+    }
+    var testFailed: String {
+        switch self {
+        case .en: "Connection failed"
+        case .zh: "连接失败"
+        }
+    }
+    var configureAPIFirst: String {
+        switch self {
+        case .en: "Configure API first"
+        case .zh: "请先配置 API"
+        }
+    }
+    var enhancing: String {
+        switch self {
+        case .en: "Enhancing\u{2026}"
+        case .zh: "AI 优化中\u{2026}"
+        }
+    }
+    var aiEnhancingText: String {
+        switch self {
+        case .en: "AI is enhancing text\u{2026}"
+        case .zh: "AI 正在优化文本\u{2026}"
+        }
+    }
+    var testing: String {
+        switch self {
+        case .en: "Testing\u{2026}"
+        case .zh: "测试中\u{2026}"
+        }
+    }
+
+    // MARK: Error Messages
+
+    var errorAlreadyProcessing: String {
+        switch self {
+        case .en: "Previous audio is still processing"
+        case .zh: "上一条语音正在处理中"
+        }
+    }
+    var errorNoMicPermission: String {
+        switch self {
+        case .en: "Microphone permission required"
+        case .zh: "需要麦克风权限"
+        }
+    }
+    var errorNoAccessibilityPermission: String {
+        switch self {
+        case .en: "Accessibility permission required for hotkey"
+        case .zh: "快捷键需要辅助功能权限"
+        }
+    }
+    var errorNoModel: String {
+        switch self {
+        case .en: "Model not downloaded"
+        case .zh: "模型未下载"
+        }
+    }
+    var errorLLMNotConfigured: String {
+        switch self {
+        case .en: "AI enhancement not configured"
+        case .zh: "AI 优化未配置"
+        }
+    }
+
+    // MARK: Ollama Local Model
+
+    var ollamaNotInstalled: String {
+        switch self {
+        case .en: "Ollama not installed"
+        case .zh: "Ollama 未安装"
+        }
+    }
+    var installOllama: String {
+        switch self {
+        case .en: "Install Ollama"
+        case .zh: "安装 Ollama"
+        }
+    }
+    var ollamaInstalled: String {
+        switch self {
+        case .en: "Ollama installed"
+        case .zh: "Ollama 已安装"
+        }
+    }
+    var ollamaRunning: String {
+        switch self {
+        case .en: "Running"
+        case .zh: "运行中"
+        }
+    }
+    var ollamaNotRunning: String {
+        switch self {
+        case .en: "Not running"
+        case .zh: "未运行"
+        }
+    }
+    var startOllama: String {
+        switch self {
+        case .en: "Start Ollama"
+        case .zh: "启动 Ollama"
+        }
+    }
+    var startingOllama: String {
+        switch self {
+        case .en: "Starting\u{2026}"
+        case .zh: "启动中\u{2026}"
+        }
+    }
+    var selectModel: String {
+        switch self {
+        case .en: "Select Model"
+        case .zh: "选择模型"
+        }
+    }
+    var downloadLocalModel: String {
+        switch self {
+        case .en: "Download Model"
+        case .zh: "下载模型"
+        }
+    }
+    var localModelHint: String {
+        switch self {
+        case .en: "Small models are recommended for fast text enhancement"
+        case .zh: "推荐使用小模型以快速优化文本"
+        }
+    }
+    var noModelsInstalled: String {
+        switch self {
+        case .en: "No models installed"
+        case .zh: "未安装模型"
+        }
+    }
+    var installedModels: String {
+        switch self {
+        case .en: "Installed Models"
+        case .zh: "已安装模型"
+        }
+    }
+    var recommendedModels: String {
+        switch self {
+        case .en: "Recommended Models"
+        case .zh: "推荐模型"
         }
     }
 }

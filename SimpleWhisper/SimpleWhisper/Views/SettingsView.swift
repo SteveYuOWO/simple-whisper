@@ -70,6 +70,8 @@ struct SettingsView: View {
                     SettingsModelSection()
                 case .input:
                     SettingsInputSection()
+                case .ai:
+                    SettingsAISection()
                 }
 
                 Spacer()

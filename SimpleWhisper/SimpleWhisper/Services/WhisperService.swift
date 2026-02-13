@@ -1,10 +1,14 @@
 import Foundation
 import WhisperKit
 
-@Observable
-final class WhisperService {
+/// Actor-isolated to ensure model loading and inference never run on the main actor
+/// and to avoid concurrent access to the underlying WhisperKit instance.
+actor WhisperService {
     private var whisperKit: WhisperKit?
-    var isModelLoaded: Bool = false
+
+    func isModelLoaded() -> Bool {
+        whisperKit != nil
+    }
 
     func loadModel(variant: String, from folder: URL) async throws {
         let config = WhisperKitConfig(
@@ -15,7 +19,6 @@ final class WhisperService {
         )
         let kit = try await WhisperKit(config)
         whisperKit = kit
-        isModelLoaded = true
     }
 
     func transcribe(audioData: [Float], language: Language) async throws -> String {
@@ -43,7 +46,6 @@ final class WhisperService {
 
     func unloadModel() {
         whisperKit = nil
-        isModelLoaded = false
     }
 
     enum WhisperError: LocalizedError {

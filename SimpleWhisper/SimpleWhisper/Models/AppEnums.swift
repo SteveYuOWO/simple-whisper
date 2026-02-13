@@ -4,7 +4,18 @@ enum TranscriptionState: Equatable {
     case idle
     case recording
     case processing
+    case enhancing
     case done
+}
+
+enum LLMProvider: String, CaseIterable, Identifiable, Codable {
+    case ollama = "ollama"
+
+    var id: String { rawValue }
+
+    func displayName(_ lang: AppLanguage) -> String {
+        return "Ollama"
+    }
 }
 
 enum WhisperModel: String, CaseIterable, Identifiable, Codable {
@@ -58,7 +69,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 }
 
 enum SettingsTab: CaseIterable, Identifiable {
-    case input, general, model
+    case input, general, model, ai
 
     var id: Self { self }
 
@@ -67,6 +78,7 @@ enum SettingsTab: CaseIterable, Identifiable {
         case .general: return "gearshape"
         case .model:   return "cpu"
         case .input:   return "mic"
+        case .ai:      return "sparkles"
         }
     }
 
@@ -78,6 +90,8 @@ enum SettingsTab: CaseIterable, Identifiable {
         case (.model, .zh):   return "模型"
         case (.input, .en):   return "Input"
         case (.input, .zh):   return "输入"
+        case (.ai, .en):      return "AI Enhance"
+        case (.ai, .zh):      return "AI 优化"
         }
     }
 }

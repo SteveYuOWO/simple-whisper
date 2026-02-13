@@ -9,11 +9,11 @@ struct SimpleWhisperApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @State private var appState = AppState()
     @State private var panelController: FloatingPanelController?
-    @State private var selectedTab: SettingsTab = .input
 
     var body: some Scene {
+        @Bindable var appState = appState
         Window("Settings", id: "settings") {
-            SettingsView(selectedTab: $selectedTab)
+            SettingsView(selectedTab: $appState.selectedTab)
                 .environment(appState)
                 .onAppear {
                     appState.checkModelStatus()
@@ -30,7 +30,7 @@ struct SimpleWhisperApp: App {
 
                     if appState.needsModelSetup {
                         // Model not downloaded — navigate to Model tab
-                        selectedTab = .model
+                        appState.selectedTab = .model
                     } else {
                         // Model available — pre-load it
                         Task {

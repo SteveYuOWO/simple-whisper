@@ -12,6 +12,8 @@ struct PopoverView: View {
                 RecordingView()
             case .processing:
                 ProcessingView()
+            case .enhancing:
+                ProcessingView()
             case .done:
                 DoneView()
             }

@@ -6,35 +6,45 @@ struct FloatingPillView: View {
     private var lang: AppLanguage { appState.appLanguage }
 
     var body: some View {
-        Group {
-            switch appState.transcriptionState {
-            case .idle:
-                idlePill
-            case .recording:
-                recordingPill
-            case .processing:
-                processingPill
-            case .done:
-                donePill
+        VStack(spacing: 8) {
+            if let errorMessage = appState.errorMessage {
+                errorPill(message: errorMessage)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+
+            if appState.transcriptionState != .idle {
+                Group {
+                    switch appState.transcriptionState {
+                    case .idle:
+                        EmptyView()
+                    case .recording:
+                        recordingPill
+                    case .processing:
+                        processingPill
+                    case .enhancing:
+                        enhancingPill
+                    case .done:
+                        donePill
+                    }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .fixedSize()
         .animation(.spring(duration: 0.3), value: appState.transcriptionState)
+        .animation(.spring(duration: 0.3), value: appState.errorMessage)
     }
 
-    // MARK: - Idle
+    // MARK: - Error
 
-    private var idlePill: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "mic")
-                .font(.system(size: 13))
-                .foregroundStyle(.white.opacity(0.5))
-            Circle()
-                .fill(Color(white: 0.28))
-                .frame(width: 6, height: 6)
-            Text(lang.ready)
+    private func errorPill(message: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 15))
+                .foregroundStyle(Color(hex: 0xFF6B6B))
+            Text(message)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(.white.opacity(0.9))
         }
         .pillStyle()
     }
@@ -42,7 +52,7 @@ struct FloatingPillView: View {
     // MARK: - Recording
 
     private var recordingPill: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             Circle()
                 .fill(.red)
                 .frame(width: 8, height: 8)
@@ -58,17 +68,30 @@ struct FloatingPillView: View {
     // MARK: - Processing
 
     private var processingPill: some View {
-        HStack(spacing: 12) {
-            ProgressView()
-                .controlSize(.small)
-                .tint(.white.opacity(0.6))
+        HStack(spacing: 10) {
             Text(lang.processing)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
-            ProgressView(value: appState.transcriptionProgress)
-                .frame(width: 80)
-                .tint(Color.brand)
-                .animation(.linear(duration: 0.3), value: appState.transcriptionProgress)
+            ProgressView()
+                .controlSize(.small)
+                .tint(.white.opacity(0.6))
+        }
+        .pillStyle()
+    }
+
+    // MARK: - Enhancing
+
+    private var enhancingPill: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 13))
+                .foregroundStyle(Color.brand)
+            Text(lang.enhancing)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.8))
+            ProgressView()
+                .controlSize(.small)
+                .tint(.white.opacity(0.6))
         }
         .pillStyle()
     }
@@ -78,12 +101,12 @@ struct FloatingPillView: View {
     private var donePill: some View {
         HStack(spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 16))
+                .font(.system(size: 18))
                 .foregroundStyle(Color.success)
             Text(lang.done)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
-            Color(white: 0.28)
+            Color(hex: 0x48484A)
                 .frame(width: 1, height: 14)
             Text(lang.wordCount(appState.wordCount))
                 .font(.system(size: 12))
@@ -107,7 +130,8 @@ private struct PillStyleModifier: ViewModifier {
             .frame(height: 20)
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
-            .background(.black.opacity(0.88), in: Capsule())
+            .background(Color(hex: 0x1C1C1E), in: Capsule())
+            .shadow(color: .black.opacity(0.25), radius: 15, x: 0, y: 8)
     }
 }
 

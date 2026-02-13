@@ -70,26 +70,79 @@ struct SettingsInputSection: View {
 
                 SettingsSeparator()
 
-                // Hotkey Display
-                HStack {
-                    Text(lang.hotkey)
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color.textPrimary)
-                    Spacer()
-                    HStack(spacing: 8) {
-                        Text(appState.hotkeyDisplay)
-                            .font(.system(size: 12, weight: .semibold))
+                // Hotkey Display / Recorder
+                if appState.isRecordingHotkey {
+                    HStack {
+                        Text(lang.hotkey)
+                            .font(.system(size: 14))
                             .foregroundStyle(Color.textPrimary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Color.bgSecondary, in: RoundedRectangle(cornerRadius: 6))
-                        Text(lang.holdToRecord)
-                            .font(.system(size: 13))
-                            .foregroundStyle(Color.textSecondary)
+                        Spacer()
+                        HStack(spacing: 8) {
+                            Text(appState.pendingHotkeyModifiers.isEmpty
+                                 ? lang.pressModifierKeys
+                                 : appState.modifierDisplay(for: appState.pendingHotkeyModifiers))
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(appState.pendingHotkeyModifiers.isEmpty ? Color.textSecondary : Color.textPrimary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.bgSecondary, in: RoundedRectangle(cornerRadius: 6))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(Color.brand, lineWidth: 1.5)
+                                )
+
+                            Button {
+                                appState.confirmRecordingHotkey()
+                            } label: {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 24, height: 24)
+                                    .background(appState.pendingHotkeyModifiers.isEmpty ? Color.gray : Color.success, in: RoundedRectangle(cornerRadius: 6))
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(appState.pendingHotkeyModifiers.isEmpty)
+
+                            Button {
+                                appState.cancelRecordingHotkey()
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 24, height: 24)
+                                    .background(Color.gray, in: RoundedRectangle(cornerRadius: 6))
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .frame(height: DS.settingsRowHeight)
+                    .padding(.horizontal, DS.settingsHPadding)
+                } else {
+                    Button {
+                        appState.startRecordingHotkey()
+                    } label: {
+                        HStack {
+                            Text(lang.hotkey)
+                                .font(.system(size: 14))
+                                .foregroundStyle(Color.textPrimary)
+                            Spacer()
+                            HStack(spacing: 8) {
+                                Text(appState.hotkeyDisplay)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(Color.textPrimary)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(Color.bgSecondary, in: RoundedRectangle(cornerRadius: 6))
+                                Text(lang.holdToRecord)
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(Color.textSecondary)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .frame(height: DS.settingsRowHeight)
+                    .padding(.horizontal, DS.settingsHPadding)
                 }
-                .frame(height: DS.settingsRowHeight)
-                .padding(.horizontal, DS.settingsHPadding)
 
                 SettingsSeparator()
 
@@ -131,9 +184,19 @@ struct SettingsInputSection: View {
             isMicrophoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
             isAccessibilityGranted = HotkeyManager.isAccessibilityGranted()
         }
+        .onDisappear {
+            if appState.isRecordingHotkey {
+                appState.cancelRecordingHotkey()
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             isMicrophoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
             isAccessibilityGranted = HotkeyManager.isAccessibilityGranted()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            if appState.isRecordingHotkey {
+                appState.cancelRecordingHotkey()
+            }
         }
     }
 }

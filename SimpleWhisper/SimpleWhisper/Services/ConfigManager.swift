@@ -10,6 +10,13 @@ struct AppConfig: Codable {
     var showInDock: Bool = false
     var selectedMicrophone: String = "Default"
     var hotkeyModifiers: [String] = ["fn", "control"]
+
+    // LLM Enhancement
+    var enableLLMEnhancement: Bool = false
+    var llmProvider: String = LLMProvider.ollama.rawValue
+    var llmApiKey: String = ""
+    var llmModel: String = "llama3.2"
+    var llmEndpoint: String = ""
 }
 
 final class ConfigManager {

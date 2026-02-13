@@ -5,6 +5,7 @@ import Foundation
 final class AudioRecorder {
     private var audioEngine: AVAudioEngine?
     private var audioBuffer: [Float] = []
+    private let bufferLock = NSLock()
     private let targetSampleRate: Double = 16000
 
     var isRecording: Bool = false
@@ -28,7 +29,9 @@ final class AudioRecorder {
     func startRecording() throws {
         guard !isRecording else { return }
 
-        audioBuffer.removeAll()
+        bufferLock.lock()
+        audioBuffer.removeAll(keepingCapacity: true)
+        bufferLock.unlock()
         let engine = AVAudioEngine()
 
         let inputNode = engine.inputNode
@@ -86,8 +89,11 @@ final class AudioRecorder {
             }
 
             if outputBuffer.frameLength > 0, let channelData = outputBuffer.floatChannelData {
-                let samples = Array(UnsafeBufferPointer(start: channelData[0], count: Int(outputBuffer.frameLength)))
-                self.audioBuffer.append(contentsOf: samples)
+                let ptr = UnsafeBufferPointer(start: channelData[0], count: Int(outputBuffer.frameLength))
+                // Avoid per-buffer Array allocations; append directly under a lock for thread safety.
+                self.bufferLock.lock()
+                self.audioBuffer.append(contentsOf: ptr)
+                self.bufferLock.unlock()
             }
         }
 
@@ -104,8 +110,10 @@ final class AudioRecorder {
         audioEngine = nil
         isRecording = false
 
+        bufferLock.lock()
         let samples = audioBuffer
-        audioBuffer.removeAll()
+        audioBuffer.removeAll(keepingCapacity: true)
+        bufferLock.unlock()
         return samples
     }
 

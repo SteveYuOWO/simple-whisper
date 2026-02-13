@@ -4,6 +4,8 @@ struct ProcessingView: View {
     @Environment(AppState.self) private var appState
     @State private var isSpinning = false
 
+    private var isEnhancing: Bool { appState.transcriptionState == .enhancing }
+
     var body: some View {
         let lang = appState.appLanguage
 
@@ -22,7 +24,7 @@ struct ProcessingView: View {
                     }
                     .onAppear { isSpinning = true }
 
-                Text(lang.transcribing)
+                Text(isEnhancing ? lang.enhancing : lang.transcribing)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Color.textPrimary)
 
@@ -39,11 +41,11 @@ struct ProcessingView: View {
                 }
                 .frame(height: 4)
 
-                Text(lang.runningInference)
+                Text(isEnhancing ? lang.aiEnhancingText : lang.runningInference)
                     .font(.system(size: 12))
                     .foregroundStyle(Color.textTertiary)
             }
-            .padding(EdgeInsets(top: 24, leading: 20, bottom: 16, trailing: 20))
+            .padding(EdgeInsets(top: 20, leading: 20, bottom: 16, trailing: 20))
 
             Divider().overlay(Color.themeSeparator)
 
